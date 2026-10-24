@@ -1,0 +1,41 @@
+# Build output and local toolchains
+/build/
+/build-*/
+/cmake-build-*/
+/CMakeFiles/
+/CMakeCache.txt
+/cmake_install.cmake
+/install_manifest.txt
+/compile_commands.json
+/CMakeUserPresets.json
+*.o
+*.a
+*.so
+*.so.*
+
+# OBJ files in assets/ are model sources, not compiler artifacts.
+
+# Local editor / Python state
+.idea/
+.vscode/
+*.user
+*.swp
+*~
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.cache/
+.DS_Store
+*.log
+
+# Local secrets and environment overrides
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Crash dumps
+/core
+/core.[0-9]*

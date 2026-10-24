@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="/stellarsue">
+        <file alias="spacecraft.obj">assets/nasa-shuttle/shuttle.obj</file>
+        <file alias="shuttle.mtl">assets/nasa-shuttle/shuttle.mtl</file>
+        <file alias="shuttle_1.jpg">assets/nasa-shuttle/shuttle_1.jpg</file>
+        <file alias="shuttle_3.jpg">assets/nasa-shuttle/shuttle_3.jpg</file>
+        <file alias="shuttle_5.jpg">assets/nasa-shuttle/shuttle_5.jpg</file>
+        <file alias="shuttle_7.jpg">assets/nasa-shuttle/shuttle_7.jpg</file>
+        <file alias="shuttle_9.jpg">assets/nasa-shuttle/shuttle_9.jpg</file>
+        <file alias="shuttle_11.jpg">assets/nasa-shuttle/shuttle_11.jpg</file>
+        <file alias="shuttle_13.jpg">assets/nasa-shuttle/shuttle_13.jpg</file>
+        <file alias="shuttle_15.jpg">assets/nasa-shuttle/shuttle_15.jpg</file>
+        <file alias="shuttle_17.jpg">assets/nasa-shuttle/shuttle_17.jpg</file>
+        <file alias="shuttle_19.jpg">assets/nasa-shuttle/shuttle_19.jpg</file>
+        <file alias="shuttle_21.jpg">assets/nasa-shuttle/shuttle_21.jpg</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,10 @@
+Generator: built-in image_gen tool (imagegen skill); transparent_background=true
+Asset: assets/stellarsue-vessel.png (embedded through stellarsue.qrc)
+Reference: user-supplied white ducted-fan aircraft image; visual inspiration, not an edit target.
+
+Use case: stylized-concept
+Asset type: transparent cutout spacecraft illustration for the Stellarsue desktop telemetry panel.
+Input image 1 is a shape/design reference, not an edit target. Create a new photorealistic premium 3D spacecraft inspired by its compact white fuselage, elongated glossy black canopy, two large rear ducted thrusters, small front stabilizers, and distinctive raised rectangular rear wing/frame.
+Composition: one complete spacecraft, three-quarter front view seen slightly from above, nose pointing toward lower left, rear toward upper right, silhouette filling a landscape canvas with 8 percent transparent margin. Keep the proportions compact and elegant, all parts fully visible.
+Materials: pearl white ceramic aerospace panels, subtle seams, dark titanium mechanical interiors, smoked black glass canopy, restrained ice-cyan engine light. Soft cool studio illumination with a warm rim light compatible with a nearby black hole.
+Scene: genuinely transparent background with alpha. No ocean, no ground, no cast shadow outside the craft, no stars, no environment, no UI, no text, no logos, no watermark. High quality coherent industrial design, clean readable silhouette at a small UI size.

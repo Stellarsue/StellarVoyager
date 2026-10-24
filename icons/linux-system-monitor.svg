@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <radialGradient id="space" cx="42%" cy="34%" r="78%">
+      <stop offset="0" stop-color="#15233D"/>
+      <stop offset=".48" stop-color="#080D1C"/>
+      <stop offset="1" stop-color="#02040B"/>
+    </radialGradient>
+    <radialGradient id="halo">
+      <stop offset="0" stop-color="#FFF2C2" stop-opacity=".18"/>
+      <stop offset=".35" stop-color="#F5A457" stop-opacity=".20"/>
+      <stop offset=".68" stop-color="#9663F2" stop-opacity=".13"/>
+      <stop offset="1" stop-color="#35CBE1" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="farRing" x1="19" y1="74" x2="109" y2="42" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#42D8E8"/>
+      <stop offset=".42" stop-color="#8F83FF"/>
+      <stop offset=".72" stop-color="#F29173"/>
+      <stop offset="1" stop-color="#FFD47D"/>
+    </linearGradient>
+    <linearGradient id="hotRing" x1="27" y1="69" x2="104" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E77A59"/>
+      <stop offset=".42" stop-color="#FFF4CE"/>
+      <stop offset=".72" stop-color="#FFD06D"/>
+      <stop offset="1" stop-color="#F19B57"/>
+    </linearGradient>
+    <linearGradient id="photon" x1="47" y1="43" x2="83" y2="82" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6EE7F2"/>
+      <stop offset=".44" stop-color="#FFF6D7"/>
+      <stop offset="1" stop-color="#FFAC59"/>
+    </linearGradient>
+    <filter id="blur" x="-80%" y="-180%" width="260%" height="460%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+  </defs>
+
+  <rect x="5" y="5" width="118" height="118" rx="31" fill="url(#space)"/>
+  <path d="M20 31C36 10 91 4 111 35" fill="none" stroke="#8FE7F2" stroke-opacity=".14" stroke-width="2"/>
+  <circle cx="31" cy="33" r="2.1" fill="#DDF9FF"/>
+  <circle cx="99" cy="29" r="1.5" fill="#FFD689"/>
+  <circle cx="106" cy="83" r="1.2" fill="#B9A8FF"/>
+  <circle cx="23" cy="91" r="1" fill="#75DCE9"/>
+
+  <ellipse cx="64" cy="62" rx="53" ry="39" fill="url(#halo)"/>
+  <g transform="rotate(-11 64 62)">
+    <ellipse cx="64" cy="62" rx="45" ry="15" fill="none" stroke="#55D9E8" stroke-opacity=".28" stroke-width="10" filter="url(#blur)"/>
+    <ellipse cx="64" cy="62" rx="46" ry="15" fill="none" stroke="url(#farRing)" stroke-opacity=".72" stroke-width="2.6"/>
+    <ellipse cx="64" cy="62" rx="39" ry="10.5" fill="none" stroke="#B3A2FF" stroke-opacity=".45" stroke-width="1.5"/>
+    <path d="M25 62C31 50 47 45 65 46C84 47 99 53 104 63" fill="none" stroke="url(#hotRing)" stroke-linecap="round" stroke-width="5"/>
+  </g>
+
+  <circle cx="64" cy="62" r="20" fill="#000105" stroke="url(#photon)" stroke-width="3"/>
+  <circle cx="64" cy="62" r="15.8" fill="#000000"/>
+  <path d="M44 65C51 72 77 77 101 66" transform="rotate(-11 64 62)" fill="none" stroke="url(#hotRing)" stroke-linecap="round" stroke-width="5.5"/>
+  <path d="M49 78C59 82 76 82 88 76" fill="none" stroke="#6BE0EB" stroke-opacity=".42" stroke-linecap="round" stroke-width="1.5"/>
+  <circle cx="94" cy="50" r="2.6" fill="#FFF2C1"/>
+  <circle cx="94" cy="50" r="6" fill="#FFC970" opacity=".12"/>
+
+  <rect x="5.75" y="5.75" width="116.5" height="116.5" rx="30.5" fill="none" stroke="#9DECF4" stroke-opacity=".12" stroke-width="1.5"/>
+</svg>

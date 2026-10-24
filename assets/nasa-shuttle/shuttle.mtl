@@ -1,0 +1,232 @@
+# Original NASA materials, adapted for the Stellarsue renderer
+newmtl shuttle_0
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_1
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_2
+Kd 0.000000 0.000000 0.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_3
+Kd 0.000000 0.000000 0.000000
+Pr 0.100000
+Pm 0.000000
+newmtl shuttle_4
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+map_Kd shuttle_1.jpg
+newmtl shuttle_5
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_6
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_7
+Kd 0.000000 0.000000 0.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_8
+Kd 0.737255 0.627451 0.262745
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_9
+Kd 1.000000 0.776471 0.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_10
+Kd 1.000000 1.000000 1.000000
+Pr 0.570000
+Pm 0.000000
+map_Kd shuttle_3.jpg
+newmtl shuttle_11
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+map_Kd shuttle_5.jpg
+newmtl shuttle_12
+Kd 0.376471 0.376471 0.376471
+Pr 0.570000
+Pm 0.000000
+newmtl shuttle_13
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+map_Kd shuttle_7.jpg
+newmtl shuttle_14
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_15
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+map_Kd shuttle_9.jpg
+newmtl shuttle_16
+Kd 0.509804 0.505882 0.560784
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_17
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+map_Kd shuttle_11.jpg
+newmtl shuttle_18
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+map_Kd shuttle_13.jpg
+newmtl shuttle_19
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+map_Kd shuttle_15.jpg
+newmtl shuttle_20
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_21
+Kd 0.501961 0.501961 0.501961
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_22
+Kd 0.501961 0.501961 0.501961
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_23
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_24
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_25
+Kd 0.501961 0.501961 0.501961
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_26
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_27
+Kd 0.501961 0.501961 0.501961
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_28
+Kd 0.262745 0.239216 0.239216
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_29
+Kd 0.262745 0.239216 0.239216
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_30
+Kd 0.250980 0.250980 0.250980
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_31
+Kd 0.250980 0.250980 0.250980
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_32
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_33
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+map_Kd shuttle_17.jpg
+newmtl shuttle_34
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+map_Kd shuttle_19.jpg
+newmtl shuttle_35
+Kd 0.835294 0.168627 0.168627
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_36
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_37
+Kd 0.000000 0.000000 0.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_38
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_39
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_40
+Kd 0.376471 0.376471 0.376471
+Pr 0.470000
+Pm 0.000000
+newmtl shuttle_41
+Kd 1.000000 1.000000 1.000000
+Pr 0.470000
+Pm 0.000000
+map_Kd shuttle_21.jpg
+newmtl door-port_0
+Kd 0.400000 0.400000 0.400000
+Pr 0.757101
+Pm 0.000000
+newmtl door-port_1
+Kd 0.784314 0.784314 0.784314
+Pr 0.470000
+Pm 0.000000
+newmtl door-port_2
+Kd 0.352941 0.400000 0.427451
+Pr 0.792636
+Pm 0.000000
+newmtl door-port_3
+Kd 0.784314 0.784314 0.784314
+Pr 0.470000
+Pm 0.000000
+newmtl door-port_4
+Kd 0.784314 0.784314 0.784314
+Pr 0.470000
+Pm 0.000000
+newmtl door-starboard_0
+Kd 0.400000 0.400000 0.400000
+Pr 0.757101
+Pm 0.000000
+newmtl door-starboard_1
+Kd 0.784314 0.784314 0.784314
+Pr 0.470000
+Pm 0.000000
+newmtl door-starboard_2
+Kd 0.352941 0.400000 0.427451
+Pr 0.792636
+Pm 0.000000
+newmtl door-starboard_3
+Kd 0.784314 0.784314 0.784314
+Pr 0.470000
+Pm 0.000000
+newmtl door-starboard_4
+Kd 0.784314 0.784314 0.784314
+Pr 0.470000
+Pm 0.000000
+newmtl engine_0
+Kd 0.400000 0.400000 0.400000
+Pr 0.420000
+Pm 0.650000
+newmtl engine_1
+Kd 0.474510 0.388235 0.325490
+Pr 0.420000
+Pm 0.650000
+newmtl engine_2
+Kd 0.266667 0.231373 0.200000
+Pr 0.420000
+Pm 0.650000

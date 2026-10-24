@@ -1,0 +1,7 @@
+# Preserve the original third-party packages and notices byte for byte.
+assets/corefonts/times32.exe binary
+assets/corefonts/EULA.html -text -whitespace
+assets/nasa-shuttle/source/*.glb binary
+assets/kenney-space-kit/License.txt -text -whitespace
+assets/kenney-space-kit/*.obj -text -whitespace
+assets/kenney-space-kit/*.mtl -text -whitespace

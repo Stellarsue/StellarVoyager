@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/stellarsue/fonts">
+        <!-- Redistribute the intact original installer, never standalone TTFs. -->
+        <file alias="times32.exe">assets/corefonts/times32.exe</file>
+        <file alias="EULA.html">assets/corefonts/EULA.html</file>
+    </qresource>
+</RCC>

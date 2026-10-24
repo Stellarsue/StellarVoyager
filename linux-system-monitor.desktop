@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Stellarsue
+Name[zh_CN]=Stellarsue · 飞行器遥测
+Comment=Stellarsue spacecraft telemetry and cosmic system monitor
+Comment[zh_CN]=Stellarsue 飞行器遥测与宇宙系统监控
+Exec=system-monitor
+TryExec=system-monitor
+Icon=linux-system-monitor
+Terminal=false
+Categories=System;Monitor;
+StartupNotify=false
+StartupWMClass=Stellarsue
+Keywords=Stellarsue;system;monitor;cpu;memory;gpu;spacecraft;
