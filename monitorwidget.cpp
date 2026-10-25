@@ -1,14 +1,19 @@
 #include "monitorwidget.h"
 
 #include "starmapwidget.h"
+#include "statusdashboard.h"
 #include "themeicons.h"
 #include "themefonts.h"
 #include "fontbundle.h"
+#if defined(Q_OS_MACOS)
+#include "macmenubarstatus.h"
+#endif
 
 #include <algorithm>
 #include <QAction>
 #include <QApplication>
 #include <QCloseEvent>
+#include <QCursor>
 #include <QEvent>
 #include <QFrame>
 #include <QGuiApplication>
@@ -17,6 +22,7 @@
 #include <QIcon>
 #include <QLabel>
 #include <QMenu>
+#include <QMessageBox>
 #include <QMouseEvent>
 #include <QScreen>
 #include <QScrollArea>
@@ -37,6 +43,8 @@ SystemMonitorWidget::SystemMonitorWidget(QWidget *parent)
     resize(480, 470);
 
     buildUi();
+    m_dashboard = std::make_unique<StatusDashboard>();
+    buildSettingsMenus();
     buildTray();
 
     m_refreshTimer = new QTimer(this);
@@ -47,6 +55,8 @@ SystemMonitorWidget::SystemMonitorWidget(QWidget *parent)
     placeAtTopRight();
     refresh();
 }
+
+SystemMonitorWidget::~SystemMonitorWidget() = default;
 
 void SystemMonitorWidget::buildUi()
 {
@@ -95,6 +105,7 @@ void SystemMonitorWidget::buildUi()
         "QToolButton:hover { background: rgba(255, 255, 255, 20); }"
         "QToolButton:pressed { background: rgba(0, 0, 0, 34); }"
         "QToolButton:checked { background: rgba(255, 215, 122, 12); }"
+        "QToolButton::menu-indicator { image: none; width: 0px; height: 0px; }"
         "QToolButton#closeButton:hover { background: rgba(248, 113, 133, 38); }"));
 
     auto *outerLayout = new QVBoxLayout(this);
@@ -160,6 +171,16 @@ void SystemMonitorWidget::buildUi()
     m_refreshButton->setAccessibleName(QStringLiteral("立即刷新"));
     connect(m_refreshButton, &QToolButton::clicked, this, &SystemMonitorWidget::refresh);
 
+    m_settingsButton = new QToolButton(m_header);
+    m_settingsButton->setObjectName(QStringLiteral("settingsButton"));
+    m_settingsButton->setIcon(ThemeIcons::icon(ThemeIcon::Settings,
+                                              QColor(QStringLiteral("#E8D1D8"))));
+    m_settingsButton->setIconSize(QSize(16, 16));
+    m_settingsButton->setFixedSize(26, 26);
+    m_settingsButton->setPopupMode(QToolButton::InstantPopup);
+    m_settingsButton->setToolTip(QStringLiteral("设置与功能菜单"));
+    m_settingsButton->setAccessibleName(QStringLiteral("设置与功能菜单"));
+
     auto *closeButton = new QToolButton(m_header);
     closeButton->setObjectName(QStringLiteral("closeButton"));
     closeButton->setIcon(ThemeIcons::icon(ThemeIcon::Close));
@@ -171,6 +192,7 @@ void SystemMonitorWidget::buildUi()
 
     headerLayout->addWidget(m_pinButton);
     headerLayout->addWidget(m_refreshButton);
+    headerLayout->addWidget(m_settingsButton);
     headerLayout->addWidget(closeButton);
     auto *starScroll = new QScrollArea(panel);
     starScroll->setWidgetResizable(true);
@@ -185,8 +207,106 @@ void SystemMonitorWidget::buildUi()
     m_header->raise();
 }
 
+void SystemMonitorWidget::buildSettingsMenus()
+{
+    m_settingsMenu = new QMenu(this);
+    m_settingsMenu->setObjectName(QStringLiteral("mainSettingsMenu"));
+    populateSettingsMenu(m_settingsMenu, false);
+    m_settingsButton->setMenu(m_settingsMenu);
+
+    auto *dashboardMenu = new QMenu(m_dashboard.get());
+    dashboardMenu->setObjectName(QStringLiteral("dashboardSettingsMenu"));
+    populateSettingsMenu(dashboardMenu, true);
+    m_dashboard->settingsButton()->setMenu(dashboardMenu);
+}
+
+void SystemMonitorWidget::populateSettingsMenu(QMenu *menu, bool fromDashboard)
+{
+    menu->setStyleSheet(QStringLiteral(
+        "QMenu { background: #F6F7F8; color: #24282D; border: 1px solid #CDD2D6;"
+        " border-radius: 9px; padding: 6px; font-family: Arial, sans-serif; font-size: 12px; }"
+        "QMenu::item { padding: 6px 28px 6px 11px; border-radius: 5px; }"
+        "QMenu::item:selected { background: #DCEEF9; color: #15394D; }"
+        "QMenu::separator { height: 1px; background: #D7DBDE; margin: 5px 8px; }"));
+
+    if (fromDashboard) {
+        auto *show = menu->addAction(QStringLiteral("显示主窗口"));
+        show->setObjectName(QStringLiteral("settingsShowWindowAction"));
+        connect(show, &QAction::triggered, this, &SystemMonitorWidget::showFromTray);
+    } else {
+        auto *dashboard = menu->addAction(QStringLiteral("打开监控面板"));
+        dashboard->setObjectName(QStringLiteral("settingsOpenDashboardAction"));
+        connect(dashboard, &QAction::triggered, this, [this] {
+            const QPoint anchor = QCursor::pos();
+            QTimer::singleShot(0, this, [this, anchor] {
+                if (m_dashboard && !m_dashboard->isVisible())
+                    m_dashboard->showAt(anchor);
+            });
+        });
+    }
+
+    auto *refreshAction = menu->addAction(QStringLiteral("立即刷新数据"));
+    refreshAction->setObjectName(QStringLiteral("settingsRefreshAction"));
+    connect(refreshAction, &QAction::triggered, this, &SystemMonitorWidget::refresh);
+
+    auto *pinAction = menu->addAction(QStringLiteral("主窗口置顶"));
+    pinAction->setObjectName(QStringLiteral("settingsPinAction"));
+    pinAction->setCheckable(true);
+    pinAction->setChecked(m_pinButton->isChecked());
+    connect(pinAction, &QAction::toggled, m_pinButton, &QToolButton::setChecked);
+    connect(m_pinButton, &QToolButton::toggled, pinAction, &QAction::setChecked);
+
+    if (FontBundle::available()) {
+        menu->addSeparator();
+        auto *fonts = menu->addAction(QStringLiteral("安装 Times New Roman…"));
+        fonts->setObjectName(QStringLiteral("settingsInstallFontsAction"));
+        connect(fonts, &QAction::triggered, this, [this] {
+            FontBundle::offerInstallation(this, false);
+        });
+    }
+
+    auto *about = menu->addAction(QStringLiteral("关于 StellarVoyager"));
+    about->setObjectName(QStringLiteral("settingsAboutAction"));
+    connect(about, &QAction::triggered, this, [this] {
+        QMessageBox dialog(QMessageBox::Information,
+                           QStringLiteral("关于 StellarVoyager"),
+                           QStringLiteral("StellarVoyager %1\n本机实时系统监控")
+                               .arg(QApplication::applicationVersion()),
+                           QMessageBox::Ok, this);
+        dialog.setOption(QMessageBox::Option::DontUseNativeDialog);
+        dialog.setStyleSheet(QStringLiteral(
+            "QMessageBox { background: #F6F7F8; color: #24282D;"
+            " font-family: Arial, sans-serif; font-size: 12px; }"
+            "QMessageBox QLabel { color: #24282D; background: transparent; }"
+            "QMessageBox QPushButton { color: #24282D; background: #E8ECEF;"
+            " border: 1px solid #C8CFD4; border-radius: 5px;"
+            " padding: 5px 14px; min-width: 48px; }"
+            "QMessageBox QPushButton:hover { background: #DCEEF9; }"));
+        dialog.exec();
+    });
+
+    menu->addSeparator();
+    auto *quit = menu->addAction(QStringLiteral("退出程序"));
+    quit->setObjectName(QStringLiteral("settingsQuitAction"));
+    quit->setIcon(ThemeIcons::icon(ThemeIcon::Power, QColor(QStringLiteral("#C74052"))));
+    connect(quit, &QAction::triggered, this, &SystemMonitorWidget::quitFromTray);
+}
+
 void SystemMonitorWidget::buildTray()
 {
+#if defined(Q_OS_MACOS)
+    m_menuBarStatus = std::make_unique<MacMenuBarStatus>(
+        [this] {
+            const QPoint anchor = QCursor::pos();
+            QTimer::singleShot(0, this, [this, anchor] { toggleDashboardAt(anchor); });
+        },
+        [this] { showFromTray(); },
+        [this] { FontBundle::offerInstallation(this, false); },
+        [this] { quitFromTray(); },
+        FontBundle::available());
+    m_trayAvailable = true;
+    return;
+#endif
     m_trayAvailable = QSystemTrayIcon::isSystemTrayAvailable();
     if (!m_trayAvailable)
         return;
@@ -198,6 +318,16 @@ void SystemMonitorWidget::buildTray()
         "QMenu::item { padding: 7px 24px 7px 9px; border-radius: 5px; }"
         "QMenu::item:selected { background: #563044; }"
         "QMenu::separator { height: 1px; background: #573244; margin: 5px 7px; }"));
+    m_networkAction = m_trayMenu->addAction(QStringLiteral("↑ 0 B/s   ↓ 0 B/s"));
+    m_networkAction->setEnabled(false);
+    m_metricsAction = m_trayMenu->addAction(QStringLiteral("FAN N/A   SSD —   MEM —   CPU —"));
+    m_metricsAction->setEnabled(false);
+    m_trayMenu->addSeparator();
+    m_dashboardAction = m_trayMenu->addAction(QStringLiteral("打开监控面板"));
+    connect(m_dashboardAction, &QAction::triggered, this, [this] {
+        const QPoint anchor = QCursor::pos();
+        QTimer::singleShot(0, this, [this, anchor] { toggleDashboardAt(anchor); });
+    });
     m_showAction = m_trayMenu->addAction(QStringLiteral("显示 StellarVoyager"));
     m_showAction->setIcon(ThemeIcons::icon(ThemeIcon::Show));
     connect(m_showAction, &QAction::triggered, this, &SystemMonitorWidget::showFromTray);
@@ -217,8 +347,12 @@ void SystemMonitorWidget::buildTray()
     m_trayIcon->setToolTip(QStringLiteral("StellarVoyager · 本机实时遥测"));
     m_trayIcon->setContextMenu(m_trayMenu);
     connect(m_trayIcon, &QSystemTrayIcon::activated, this, [this](QSystemTrayIcon::ActivationReason reason) {
-        if (reason == QSystemTrayIcon::Trigger || reason == QSystemTrayIcon::DoubleClick)
+        if (reason == QSystemTrayIcon::Trigger) {
+            const QPoint anchor = QCursor::pos();
+            QTimer::singleShot(0, this, [this, anchor] { toggleDashboardAt(anchor); });
+        } else if (reason == QSystemTrayIcon::DoubleClick) {
             showFromTray();
+        }
     });
     m_trayIcon->show();
 }
@@ -243,6 +377,42 @@ void SystemMonitorWidget::refresh()
 void SystemMonitorWidget::updateSnapshot(const SystemSnapshot &snapshot)
 {
     m_starMap->setSnapshot(snapshot);
+    if (m_dashboard) m_dashboard->updateSnapshot(snapshot);
+#if defined(Q_OS_MACOS)
+    if (m_menuBarStatus)
+        m_menuBarStatus->update(snapshot);
+#endif
+    const QString network = QStringLiteral("↑ %1   ↓ %2")
+                                .arg(formatRate(snapshot.networkTransmitBytesPerSecond),
+                                     formatRate(snapshot.networkReceiveBytesPerSecond));
+    const QString fan = snapshot.fanRpm >= 0.0
+                            ? QString::number(qRound(snapshot.fanRpm))
+                            : QStringLiteral("N/A");
+    const QString storage = snapshot.storageTotal > 0
+                                ? formatPercent(snapshot.storageUsagePercent)
+                                : QStringLiteral("N/A");
+    const QString memory = snapshot.memoryTotal > 0
+                               ? formatPercent(snapshot.memoryUsagePercent)
+                               : QStringLiteral("N/A");
+    const QString metrics = QStringLiteral("FAN %1   SSD %2   MEM %3   CPU %4")
+                                .arg(fan,
+                                     storage,
+                                     memory,
+                                     formatPercent(snapshot.cpuUsagePercent));
+    if (m_networkAction) m_networkAction->setText(network);
+    if (m_metricsAction) m_metricsAction->setText(metrics);
+    if (m_trayIcon)
+        m_trayIcon->setToolTip(QStringLiteral("StellarVoyager  %1  %2").arg(network, metrics));
+}
+
+void SystemMonitorWidget::toggleDashboardAt(const QPoint &globalAnchor)
+{
+    if (!m_dashboard) return;
+    if (m_dashboard->isVisible()) {
+        m_dashboard->hide();
+    } else {
+        m_dashboard->showAt(globalAnchor);
+    }
 }
 
 void SystemMonitorWidget::toggleAlwaysOnTop(bool enabled)

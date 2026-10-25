@@ -16,6 +16,7 @@ class QOpenGLShaderProgram;
 class QPainter;
 class QResizeEvent;
 class QShowEvent;
+class QSurfaceFormat;
 class QTimer;
 class QWheelEvent;
 class StarOverlayWidget;
@@ -29,6 +30,7 @@ public:
     explicit StarMapWidget(QWidget *parent = nullptr);
     ~StarMapWidget() override;
 
+    static QSurfaceFormat requiredSurfaceFormat();
     QSize sizeHint() const override;
     void setSnapshot(const SystemSnapshot &snapshot);
     bool spacecraftReady() const { return m_shipProgram && m_shipTexture && m_shipVertexCount > 0; }

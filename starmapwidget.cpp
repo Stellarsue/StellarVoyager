@@ -1096,8 +1096,7 @@ private:
     StarMapWidget *m_owner = nullptr;
 };
 
-StarMapWidget::StarMapWidget(QWidget *parent)
-    : QOpenGLWidget(parent)
+QSurfaceFormat StarMapWidget::requiredSurfaceFormat()
 {
     QSurfaceFormat format;
     format.setRenderableType(QSurfaceFormat::OpenGL);
@@ -1107,7 +1106,13 @@ StarMapWidget::StarMapWidget(QWidget *parent)
     format.setDepthBufferSize(24);
     format.setStencilBufferSize(0);
     format.setSamples(4);
-    setFormat(format);
+    return format;
+}
+
+StarMapWidget::StarMapWidget(QWidget *parent)
+    : QOpenGLWidget(parent)
+{
+    setFormat(requiredSurfaceFormat());
     setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
 
     setFixedHeight(458);
@@ -1726,6 +1731,7 @@ void StarMapWidget::paintGL()
         glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
         glClear(GL_COLOR_BUFFER_BIT);
     }
+
 }
 
 void StarMapWidget::paintOverlay(QPainter &painter)

@@ -7,6 +7,7 @@
 #include <QFileInfo>
 #include <QFontDatabase>
 #include <QRawFont>
+#include <QSettings>
 #include <QTemporaryDir>
 #include <QTextBrowser>
 #include <QTimer>
@@ -22,9 +23,13 @@ int main(int argc, char **argv)
 {
     QTemporaryDir sandbox;
     require(sandbox.isValid(), "isolated data directory");
+    qputenv("STELLARSUE_TEST_DATA_HOME", sandbox.path().toUtf8() + "/data");
     qputenv("XDG_DATA_HOME", sandbox.path().toUtf8() + "/data");
     qputenv("XDG_CACHE_HOME", sandbox.path().toUtf8() + "/cache");
     qputenv("XDG_CONFIG_HOME", sandbox.path().toUtf8() + "/config");
+    QSettings::setDefaultFormat(QSettings::IniFormat);
+    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope,
+                       sandbox.filePath(QStringLiteral("config")));
     QApplication app(argc, argv);
     app.setOrganizationName("StellarsueTests");
     app.setApplicationName("FontInstallation");

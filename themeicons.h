@@ -16,6 +16,7 @@ enum class ThemeIcon
     Network,
     Gpu,
     Overview,
+    Settings,
     Show,
     Power
 };

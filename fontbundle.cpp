@@ -65,11 +65,20 @@ bool runProcess(const QString &program, const QStringList &arguments, QString *e
 
 bool FontBundle::available()
 {
+#if !defined(Q_OS_LINUX) && !defined(STELLARSUE_TESTING)
+    return false;
+#else
     return QFile::exists(packagePath) && QFile::exists(licensePath);
+#endif
 }
 
 QString FontBundle::installDirectory()
 {
+#if defined(STELLARSUE_TESTING)
+    const QString testDataHome = qEnvironmentVariable("STELLARSUE_TEST_DATA_HOME");
+    if (!testDataHome.isEmpty())
+        return QDir(testDataHome).filePath(QStringLiteral("fonts/stellarsue-times"));
+#endif
     return QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)
            + QStringLiteral("/fonts/stellarsue-times");
 }
@@ -77,6 +86,11 @@ QString FontBundle::installDirectory()
 FontBundle::InstallResult FontBundle::installForCurrentUser(bool licenseAccepted)
 {
     InstallResult result;
+#if !defined(Q_OS_LINUX) && !defined(STELLARSUE_TESTING)
+    Q_UNUSED(licenseAccepted);
+    result.error = QStringLiteral("共享字体安装当前仅支持 Linux。");
+    return result;
+#else
     if (!licenseAccepted) {
         result.error = QStringLiteral("尚未接受微软原始字体许可，未安装任何字体。");
         return result;
@@ -162,6 +176,7 @@ FontBundle::InstallResult FontBundle::installForCurrentUser(bool licenseAccepted
     result.success = true;
     result.directory = directory;
     return result;
+#endif
 }
 
 void FontBundle::offerInstallation(QWidget *parent, bool onlyIfMissing)

@@ -1,16 +1,20 @@
 #include "monitorwidget.h"
+#include "starmapwidget.h"
 #include "themeicons.h"
 #include "themefonts.h"
 #include "fontbundle.h"
-#include "starmapwidget.h"
 
 #include <QApplication>
-#include <QDebug>
 #include <QCommandLineParser>
+#include <QDebug>
+#include <QSurfaceFormat>
 #include <QTimer>
 
 int main(int argc, char *argv[])
 {
+    // QOpenGLWidget contexts must share the same profile as Qt's application
+    // context. On macOS this default has to be installed before QApplication.
+    QSurfaceFormat::setDefaultFormat(StarMapWidget::requiredSurfaceFormat());
     QApplication app(argc, argv);
     ThemeFonts::registerBundledFallbacks();
     QApplication::setFont(ThemeFonts::text());
@@ -23,7 +27,7 @@ int main(int argc, char *argv[])
     QApplication::setWindowIcon(ThemeIcons::applicationIcon());
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(QStringLiteral("Interactive 3D Linux system telemetry"));
+    parser.setApplicationDescription(QStringLiteral("Interactive 3D desktop system telemetry"));
     parser.addHelpOption();
     parser.addVersionOption();
     parser.addOption({QStringLiteral("install-fonts"), QStringLiteral("Install bundled fonts for the current user.")});

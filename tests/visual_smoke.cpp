@@ -4,10 +4,15 @@
 #include "flightpath.h"
 #include "nebulaenvironment.h"
 #include "themefonts.h"
+#include "themeicons.h"
+#include "systeminfo.h"
+#include "statusdashboard.h"
 
 #include <QApplication>
+#include <QAction>
 #include <QCursor>
 #include <QDir>
+#include <QEventLoop>
 #include <QFile>
 #include <QImage>
 #include <QHelpEvent>
@@ -16,10 +21,13 @@
 #include <QLabel>
 #include <QLineF>
 #include <QMouseEvent>
+#include <QMenu>
+#include <QMessageBox>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QScreen>
 #include <QSet>
+#include <QSurfaceFormat>
 #include <QTextLayout>
 #include <QTemporaryDir>
 #include <QTimer>
@@ -149,24 +157,65 @@ void validateSkyAndFonts()
     const QString resolved = QFontInfo(textFont).family();
     if (QFontDatabase::families().contains(QStringLiteral("Times New Roman")))
         require(resolved == QStringLiteral("Times New Roman"), "actual Times New Roman is used when installed");
-    else require(resolved == QStringLiteral("Liberation Serif"), "serif fallback is explicit");
+    else {
+#if defined(Q_OS_LINUX)
+        require(resolved == QStringLiteral("Liberation Serif"), "Linux serif fallback is explicit");
+#else
+        require(!resolved.isEmpty(), "native serif fallback resolves");
+#endif
+    }
     QTextLayout layout(QStringLiteral("本机遥测 CPU 75% ↑ ↓"), textFont);
     layout.beginLayout();
     layout.createLine().setLineWidth(250);
     layout.endLayout();
     bool chineseSerif = false;
+    const QStringList cjkSerifFamilies = {
+        QStringLiteral("Noto Serif CJK"),
+        QStringLiteral("Songti"),
+        QStringLiteral("STSong"),
+        QStringLiteral("SimSun"),
+        QStringLiteral("NSimSun"),
+        QStringLiteral("MingLiU"),
+        QStringLiteral("PMingLiU")
+    };
     for (const auto &run : layout.glyphRuns()) {
-        chineseSerif |= run.rawFont().familyName().contains(QStringLiteral("Noto Serif CJK"));
+        const QString family = run.rawFont().familyName();
+        for (const auto &candidate : cjkSerifFamilies)
+            chineseSerif |= family.contains(candidate, Qt::CaseInsensitive);
         for (quint32 glyph : run.glyphIndexes()) require(glyph != 0, "no missing Chinese or symbol glyphs");
     }
     require(chineseSerif, "Chinese text uses serif fallback");
     qInfo("Resolved Latin font: %s", qPrintable(resolved));
 }
+
+void validateSystemTelemetry()
+{
+    SystemInfoReader reader;
+    const SystemSnapshot snapshot = reader.sample();
+    require(snapshot.cpuCoreCount > 0, "CPU core count available");
+    require(snapshot.memoryTotal > 0, "physical memory available");
+    require(snapshot.storageTotal > 0, "system storage available");
+    require(snapshot.uptimeSeconds > 0, "system uptime available");
+}
+
+void validateAppIcon()
+{
+    const QImage source(QStringLiteral(":/stellarsue/app-icon.png"));
+    require(!source.isNull() && source.width() >= 512 && source.hasAlphaChannel(),
+            "generated transparent app icon bundled");
+    const QPixmap taskbar = ThemeIcons::applicationIcon().pixmap(32, 32);
+    require(!taskbar.isNull()
+                && qRound(taskbar.width() / taskbar.devicePixelRatioF()) == 32
+                && qRound(taskbar.height() / taskbar.devicePixelRatioF()) == 32,
+            "taskbar-sized app icon available");
+}
 }
 
 int main(int argc, char **argv)
 {
+    QSurfaceFormat::setDefaultFormat(StarMapWidget::requiredSurfaceFormat());
     QApplication app(argc, argv);
+    QApplication::setFont(ThemeFonts::text());
     const QString captureMode = argc > 1 ? QString::fromLocal8Bit(argv[1]) : QString();
     if (argc > 2 && (captureMode == QStringLiteral("--capture-running")
                     || captureMode == QStringLiteral("--capture-hover-running"))) {
@@ -193,11 +242,112 @@ int main(int argc, char **argv)
     validateMesh();
     validateFlightPath();
     validateSkyAndFonts();
+    validateSystemTelemetry();
+    validateAppIcon();
     const QString output = argc > 1 ? QString::fromLocal8Bit(argv[1])
                                    : QStringLiteral("/tmp/stellarsue-scene-smoke");
     require(QDir().mkpath(output), "screenshot directory");
     SystemMonitorWidget window;
     window.show();
+    window.raise();
+    window.activateWindow();
+    app.processEvents();
+    auto *settings = window.findChild<QToolButton *>(QStringLiteral("settingsButton"));
+    require(settings && settings->menu(), "main window has a settings menu button");
+    auto hasAction = [](const QMenu *menu, const QString &name) {
+        for (const QAction *action : menu->actions())
+            if (action->objectName() == name) return true;
+        return false;
+    };
+    QAction *quitAction = nullptr;
+    for (QAction *action : settings->menu()->actions()) {
+        if (action->objectName() == QStringLiteral("settingsQuitAction")) {
+            quitAction = action;
+            break;
+        }
+    }
+    require(quitAction, "settings menu provides a real exit action");
+    QWidget *attachedDashboard = nullptr;
+    for (QWidget *topLevel : QApplication::topLevelWidgets()) {
+        if (topLevel->objectName() == QStringLiteral("statusDashboard")) {
+            attachedDashboard = topLevel;
+            break;
+        }
+    }
+    auto *dashboardSettings = attachedDashboard
+                                  ? attachedDashboard->findChild<QToolButton *>(
+                                        QStringLiteral("dashboardSettingsButton"))
+                                  : nullptr;
+    require(dashboardSettings && dashboardSettings->menu()
+                && hasAction(dashboardSettings->menu(), QStringLiteral("settingsQuitAction")),
+            "tray dashboard has the same exit entry in its settings menu");
+    auto inspectSettingsPopup = [&](QToolButton *button, const QString &fileName) {
+        bool shown = false;
+        QTimer::singleShot(180, [&] {
+            QMenu *menu = button->menu();
+            shown = menu->isVisible();
+            if (shown)
+                require(menu->grab().save(output + QLatin1Char('/') + fileName),
+                        "visible settings menu screenshot");
+            menu->hide();
+        });
+        button->showMenu();
+        app.processEvents();
+        require(shown, "settings button opens a visible menu");
+    };
+    inspectSettingsPopup(settings, QStringLiteral("settings-main.png"));
+    // Qt may deliver the closing popup's focus event on the next event-loop
+    // turn; let it settle before showing a second Qt::Popup window.
+    QEventLoop menuTransition;
+    QTimer::singleShot(120, &menuTransition, &QEventLoop::quit);
+    menuTransition.exec();
+    auto *attachedStatus = static_cast<StatusDashboard *>(attachedDashboard);
+    attachedStatus->showAt(QPoint(app.primaryScreen()->availableGeometry().right() - 16,
+                                  app.primaryScreen()->availableGeometry().top() + 4));
+    app.processEvents();
+    require(attachedStatus->isVisible(), "attached tray dashboard opens");
+    inspectSettingsPopup(dashboardSettings, QStringLiteral("settings-dashboard.png"));
+    attachedStatus->hide();
+    QAction *aboutAction = nullptr;
+    for (QAction *action : settings->menu()->actions()) {
+        if (action->objectName() == QStringLiteral("settingsAboutAction")) {
+            aboutAction = action;
+            break;
+        }
+    }
+    require(aboutAction, "settings menu provides an About action");
+    QTimer::singleShot(180, [&] {
+        auto *dialog = qobject_cast<QMessageBox *>(QApplication::activeModalWidget());
+        require(dialog && dialog->isVisible(), "About dialog is visible");
+        require(dialog->grab().save(output + QStringLiteral("/settings-about.png")),
+                "About dialog screenshot");
+        dialog->accept();
+    });
+    aboutAction->trigger();
+    {
+        StatusDashboard dashboard;
+        SystemInfoReader reader;
+        dashboard.updateSnapshot(reader.sample());
+        const QRect available = app.primaryScreen()->availableGeometry();
+        dashboard.showAt(QPoint(available.right() - 16, available.top() + 4));
+        app.processEvents();
+        require(dashboard.isVisible(), "tray dashboard opens as a popup");
+        require(QFontInfo(dashboard.font()).family() != QStringLiteral("Times New Roman"),
+                "tray dashboard keeps a sans-serif UI font independently of the main scene");
+        auto *cpuModel = dashboard.findChild<QLabel *>(QStringLiteral("cpuModel"));
+        require(cpuModel && QFontInfo(cpuModel->font()).family()
+                                != QStringLiteral("Times New Roman"),
+                "tray card labels keep the sans-serif font before scroll reparenting");
+        for (const auto &name : {"cpuCard", "storageCard", "memoryCard", "fanCard", "networkCard"})
+            require(dashboard.findChild<QWidget *>(QLatin1String(name)) != nullptr,
+                    "tray dashboard includes every requested telemetry card");
+        require(dashboard.screen()->availableGeometry().contains(dashboard.geometry()),
+                "tray dashboard remains fully on screen");
+        require(dashboard.grab().save(output + QStringLiteral("/dashboard-live.png")),
+                "live tray dashboard screenshot");
+        dashboard.hide();
+        require(!dashboard.isVisible(), "tray dashboard can be dismissed");
+    }
     double initialFlightSeconds = -1;
     QPointF initialFlightAnchor;
     QTimer::singleShot(650, [&] {
@@ -242,6 +392,29 @@ int main(int argc, char **argv)
         qInfo("Renderer: %s", scene->context()->functions()->glGetString(GL_RENDERER));
         require(scene->context()->functions()->glGetError() == GL_NO_ERROR, "no GL errors");
         scene->doneCurrent();
+#if defined(Q_OS_MACOS)
+        // A non-shared QOpenGLWidget context can render and pass framebuffer
+        // checks while its native layer remains black on the macOS desktop.
+        // Verify the bright accretion ring survives final window composition.
+        const QRect windowRect = window.frameGeometry();
+        const QImage composited = window.screen()
+                                      ->grabWindow(0, windowRect.x(), windowRect.y(),
+                                                   windowRect.width(), windowRect.height())
+                                      .toImage();
+        require(!composited.isNull(), "macOS composited window capture");
+        const qreal scaleX = qreal(composited.width()) / window.width();
+        const qreal scaleY = qreal(composited.height()) / window.height();
+        const QRect ringRegion(qRound(100 * scaleX), qRound(90 * scaleY),
+                               qRound(280 * scaleX), qRound(130 * scaleY));
+        int brightSamples = 0;
+        for (int y = ringRegion.top(); y <= ringRegion.bottom(); y += 4) {
+            for (int x = ringRegion.left(); x <= ringRegion.right(); x += 4) {
+                const QRgb pixel = composited.pixel(x, y);
+                brightSamples += qRed(pixel) + qGreen(pixel) + qBlue(pixel) > 200;
+            }
+        }
+        require(brightSamples > 100, "OpenGL scene reaches the macOS desktop compositor");
+#endif
         require(window.grab().save(output + QStringLiteral("/scene-default.png")), "default screenshot");
         require(scene->toolTip().isEmpty(), "old native rectangular tooltip removed");
         QHelpEvent help(QEvent::ToolTip, QPoint(180, 220), scene->mapToGlobal(QPoint(180, 220)));
@@ -349,7 +522,10 @@ int main(int argc, char **argv)
                                     "resume does not jump by hidden duration");
                             qInfo("PASS: spherical sky and 360-degree camera, directional cloud culling, serif fonts and Chinese fallback, NASA orbiter/textures, 48 s cruise, hide/resume, 10 px alpha edges, telemetry, zoom/reset, GL lifecycle.");
                             window.hide();
-                            app.quit();
+                            QTimer::singleShot(1000, &app, [] {
+                                qFatal("Smoke test failed: settings exit action did not quit");
+                            });
+                            quitAction->trigger();
                         });
                     });
                 });

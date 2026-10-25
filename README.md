@@ -1,10 +1,14 @@
-# StellarVoyager
+<p align="center">
+  <img src="icons/stellarvoyager-logo.png" alt="StellarVoyager Logo" width="180">
+</p>
 
-**让你的电脑，成为一艘穿行星海的飞船。**
+<h1 align="center">StellarVoyager</h1>
 
-An immersive Linux system monitor that brings real-time system telemetry into an interactive 3D universe, featuring a black hole, vibrant nebulae, and an orbiting spacecraft.
+<p align="center"><strong>让你的电脑，成为一艘穿行星海的飞船。</strong></p>
 
-StellarVoyager 是一款使用 **C++17 · Qt Widgets · OpenGL** 构建的 Linux 桌面系统监控应用。它将 CPU、内存、磁盘、网络和 GPU 数据融入可旋转的三维宇宙：航天飞机沿固定航线巡航，黑洞与环绕星云构成背景，本机运行状态以飞行器遥测的方式呈现。
+<p align="center"><em>An immersive desktop system monitor that brings real-time telemetry into an interactive 3D universe, featuring a black hole, vibrant nebulae, and an orbiting spacecraft.</em></p>
+
+StellarVoyager 是一款使用 **C++17 · Qt Widgets · OpenGL** 构建的跨平台桌面系统监控应用。它将 CPU、内存、磁盘、网络和可用时的 GPU 数据融入可旋转的三维宇宙：航天飞机沿固定航线巡航，黑洞与环绕星云构成背景，本机运行状态以飞行器遥测的方式呈现。
 
 ![StellarVoyager 场景预览，使用测试数据](docs/images/scene-preview.png)
 
@@ -13,6 +17,8 @@ StellarVoyager 是一款使用 **C++17 · Qt Widgets · OpenGL** 构建的 Linux
 ## 下载 Linux 版
 
 [最新发布版本](https://github.com/Stellarsue/StellarVoyager/releases/latest) · **v1.0.0 / x86_64（amd64）**
+
+> v1.0.0 下载包对应该版本标签；下文新增的跨平台状态面板与平台适配以 `main` 分支源码为准，尚未包含在此 Linux 发布包中。
 
 - [AppImage 便携版](https://github.com/Stellarsue/StellarVoyager/releases/download/v1.0.0/StellarVoyager-1.0.0-x86_64.AppImage)：内置 Qt、中文/英文回退字体及字体解包工具，无需安装 Qt。
 - [.deb 安装包](https://github.com/Stellarsue/StellarVoyager/releases/download/v1.0.0/StellarVoyager-1.0.0-linux-amd64.deb)：适合 Ubuntu 22.04 / 24.04，自动安装运行依赖并添加应用菜单入口。
@@ -47,22 +53,25 @@ AppImage 默认通过 X11/XWayland 运行，不附带显卡驱动。精简系统
 ## 特性
 
 - **实时遥测**：CPU 占用与逻辑核心数、内存、根分区磁盘、网络上下行速率、运行时间，以及驱动支持时的 GPU 负载、显存和温度。
+- **常驻状态读数**：macOS 菜单栏显示双行网络、风扇、SSD、内存与 CPU 指标；Linux/Windows 托盘菜单和提示文字显示同一组数据。传感器不可读时显示 N/A，不伪造读数。
+- **状态栏详情面板**：左键点击 macOS 菜单栏读数或 Linux/Windows 托盘图标，弹出 CPU 曲线、系统磁盘、内存、风扇和网络卡片；窗口会限制在屏幕内，空间不足时可滚动。macOS 右键保留显示主窗口与退出菜单。
+- **统一功能菜单**：主窗口和状态详情面板都有齿轮按钮，可打开监控面板或主窗口、立即刷新、切换主窗口置顶、查看关于信息及退出程序；Linux 还可安装可选字体。
 - **交互式三维宇宙**：鼠标旋转、缩放和复位；14 组远景星云分布于四周及上下方，不同朝向呈现不同景色。
 - **黑洞视觉效果**：物理启发的吸积盘、光子环、透镜光带和明暗变化，与飞船保持前后遮挡关系。
 - **真实三维飞行器素材**：基于 NASA/Johnson Space Center 的 Space Shuttle (D) 模型，包含 37,004 个三角形和 11 张表面贴图。
 - **固定航线巡航**：每 48 秒完成一圈，机头跟随航线切线，配有细线轨迹和尾迹；隐藏窗口时暂停飞行计时。
 - **桌面融合**：无边框、半透明、默认置顶，仅在边缘 10 个逻辑像素内羽化，保留内部场景清晰度。
 - **紧凑悬停详情**：278px 宽的半透明圆角遥测卡，保留完整读数；移出、拖动或缩放时自动收起。
-- **共享字体安装**：可选离线安装 Times New Roman 四种字形，供当前用户的其他桌面程序使用；中文采用衬线字体回退。
-- **本地运行**：读取 Linux 系统接口，无需监控服务端。模型、贴图及可选字体安装包内置于可执行文件。
+- **共享字体安装（Linux）**：可选离线安装 Times New Roman 四种字形，供当前用户的其他桌面程序使用；其他平台使用系统字体回退。
+- **本地运行**：读取各系统的本机接口，无需监控服务端。模型与贴图内置于可执行文件；Linux 默认构建还包含可选字体安装包。
 
 ## 环境要求
 
-- Linux 桌面环境，支持 OpenGL 3.3 Core；透明效果需要桌面合成器。
+- Linux、macOS 或 Windows 桌面环境，支持 OpenGL 3.3 Core；透明效果需要桌面合成器。
 - C++17 编译器、CMake 3.16 或更新版本。
-- **Qt 6.2 或更新的 Qt 6 版本**，包含 Widgets、OpenGL、OpenGLWidgets 组件和 JPEG 图像支持。
-- 发行版以 Ubuntu 22.04 / GCC 11 / Qt 6.2.4 构建；开发环境另验证过 Ubuntu 24.04 / X11 / Qt 6.9.2。
-- 干净的 Ubuntu 22.04、24.04 容器使用 Xvfb/Mesa 进行图形启动测试；这不等于覆盖所有真实显卡和桌面合成器。
+- **Qt 6.2 或更新的 Qt 6 版本**，包含 Widgets、Network、OpenGL、OpenGLWidgets 组件和 JPEG 图像支持。
+- Linux 发行版以 Ubuntu 22.04 / GCC 11 / Qt 6.2.4 构建；开发环境另验证过 Ubuntu 24.04 / X11 / Qt 6.9.2，以及 Intel macOS / Qt 6.9.0。
+- 干净的 Ubuntu 22.04、24.04 容器使用 Xvfb/Mesa 进行图形启动测试。Windows 代码已按平台隔离但尚未实机验证；Wayland 原生会话的窗口定位、置顶和托盘行为也尚未完整验证。
 
 Ubuntu 上的基础工具、字体回退及可选字体解包依赖：
 
@@ -85,11 +94,25 @@ cmake --build build -j2
 ./build/system-monitor
 ```
 
-如果使用独立 Qt SDK，配置时可增加 `-DCMAKE_PREFIX_PATH=/path/to/Qt/gcc_64`，将路径替换为实际 SDK 目录。直接运行源码构建的程序需要匹配的 Qt 动态库与平台插件；无需自行配置依赖的用户请下载 AppImage。
+以上为 Linux/macOS 使用单配置生成器时的运行命令。Windows 使用 Visual Studio 等多配置生成器时，程序通常位于 `build/Release/system-monitor.exe`；具体路径以构建输出为准。macOS 菜单栏空间不足时，新状态项可能被系统隐藏，需要腾出菜单栏空间。
+
+### macOS 安装到“应用程序”
+
+在 macOS 上先构建，再生成可从 Finder 打开的 `.app`；打包脚本会加入应用图标、Qt 框架和 Cocoa 插件，并进行本机临时签名：
+
+```bash
+bash tools/package_macos.sh build/system-monitor build/StellarVoyager.app
+ditto build/StellarVoyager.app /Applications/StellarVoyager.app
+open /Applications/StellarVoyager.app
+```
+
+打包脚本不会覆盖已有的 `build/StellarVoyager.app`；重新打包时请指定新的输出路径，或先自行备份旧包。该签名只适合本机安装，分发到其他 Mac 需要正式签名和公证。
+
+如果使用独立 Qt SDK，配置时可增加 `-DCMAKE_PREFIX_PATH=/path/to/Qt/gcc_64`，将路径替换为实际 SDK 目录。直接运行源码构建的程序需要匹配的 Qt 动态库与平台插件；Linux 用户若不想自行配置依赖，可下载上面的 AppImage。
 
 为兼容已有桌面安装，暂时保留 `system-monitor` 可执行文件名、`linux-system-monitor.desktop` 桌面文件名，以及 `STELLARSUE_` 开头的构建选项和资源路径。
 
-## 安装到当前用户
+## 安装到当前用户（Linux）
 
 ```bash
 cmake --install build --prefix "$HOME/.local"
@@ -122,14 +145,16 @@ cp "$HOME/.local/share/applications/linux-system-monitor.desktop" \
 | 悬停星空 | 查看完整系统遥测 |
 | 拖动顶部控制条 | 移动窗口 |
 | 图钉 / 刷新按钮 | 切换置顶 / 立即采样 |
+| 主窗口或详情面板的齿轮按钮 | 打开功能菜单，包括“退出程序” |
 | 关闭按钮 | 有托盘时隐藏窗口；无托盘时退出 |
-| 托盘菜单 | 显示窗口、安装共享字体或退出 |
+| 左键点击菜单栏读数 / 托盘图标 | 打开或关闭五卡片系统详情面板 |
+| macOS 右键菜单栏读数 / Linux、Windows 托盘菜单 | 显示主窗口或退出；Linux 另提供共享字体安装 |
 
 默认窗口约为 480 × 470；水平旋转连续 360°，俯仰范围约为 ±69°。
 
-## 字体
+## 字体（Linux）
 
-英文和数字优先使用 **Times New Roman**，缺失时回退到 **Liberation Serif**；中文使用 **Noto Serif CJK SC**。
+Linux 上英文和数字优先使用 **Times New Roman**，缺失时回退到 **Liberation Serif**；中文使用 **Noto Serif CJK SC**。macOS 与 Windows 不提供共享字体安装功能，使用系统可用字体回退。
 
 默认构建携带完整、未经修改的微软历史 Core Fonts for the Web 原始安装包及 EULA，**不是从 Windows 系统复制的新版字体，也不单独重新分发 TTF**。
 
@@ -156,7 +181,8 @@ cmake --build build -j2
 
 ## 数据来源与边界
 
-- CPU、内存、网络和运行时间来自 `/proc`；根分区容量通过 Qt `QStorageInfo` 获取。
+- Linux 的 CPU、内存、网络和运行时间来自 `/proc`；macOS 使用 Mach/sysctl，Windows 使用系统 API。系统磁盘容量通过 Qt `QStorageInfo` 获取。
+- Linux 尝试读取 hwmon 风扇转速；Intel macOS 对 AppleSMC 作只读查询。Apple Silicon 和 Windows 不保证可读取风扇，失败时显示 N/A。
 - GPU 优先查询 `nvidia-smi`，否则尝试 DRM/sysfs。具体指标取决于驱动暴露的接口；不可用的负载显示 N/A，不伪造数据。
 - 网络速率是非 `lo` 网卡的累计字节差分，不是网络测速。
 - 黑洞渲染是**物理启发的视觉近似**，不是广义相对论光线追踪；飞船巡航是艺术化固定路径，不是航天动力学模拟。
@@ -181,6 +207,7 @@ QT_QPA_PLATFORM=offscreen ./build/stellarsue-font-test
 
 - `systeminfo.*`：本机系统数据采集。
 - `monitorwidget.*`：主窗口、控制条和系统托盘。
+- `statusdashboard.*`：菜单栏或托盘点击后显示的跨平台详情面板。
 - `starmapwidget.*`、`blackholewidget.*`：宇宙场景、黑洞和遥测绘制。
 - `nebulaenvironment.*`、`flightpath.*`、`spacecraftmesh.*`：星云分布、巡航路径和模型加载。
 - `telemetrytooltip.*`、`themefonts.h`、`fontbundle.*`：主题提示卡、字体选择和安装。

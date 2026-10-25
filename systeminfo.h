@@ -18,6 +18,11 @@ struct SystemSnapshot
 {
     double cpuUsagePercent = 0.0;
     int cpuCoreCount = 0;
+    QString cpuModel;
+    double cpuTemperatureCelsius = -1.0;
+    double cpuUserPercent = -1.0;
+    double cpuSystemPercent = -1.0;
+    double cpuIdlePercent = -1.0;
 
     quint64 memoryUsed = 0;
     quint64 memoryTotal = 0;
@@ -26,10 +31,15 @@ struct SystemSnapshot
     quint64 storageUsed = 0;
     quint64 storageTotal = 0;
     double storageUsagePercent = 0.0;
+    QString storageName;
+    double storageReadBytesPerSecond = -1.0;
+    double storageWriteBytesPerSecond = -1.0;
+    double fanRpm = -1.0;
 
     double networkReceiveBytesPerSecond = 0.0;
     double networkTransmitBytesPerSecond = 0.0;
     QString networkInterface;
+    QString localIpv4Address;
 
     double uptimeSeconds = 0.0;
     GpuSnapshot gpu;
@@ -46,7 +56,16 @@ private:
     struct CpuCounters
     {
         quint64 total = 0;
+        quint64 user = 0;
+        quint64 system = 0;
         quint64 idle = 0;
+        bool valid = false;
+    };
+
+    struct StorageCounters
+    {
+        quint64 readBytes = 0;
+        quint64 writeBytes = 0;
         bool valid = false;
     };
 
@@ -59,16 +78,24 @@ private:
     };
 
     CpuCounters readCpuCounters() const;
+    QString readCpuModel() const;
+    double readCpuTemperature() const;
     NetworkCounters readNetworkCounters() const;
+    QString readLocalIpv4Address(const QStringList &interfaces) const;
+    StorageCounters readStorageCounters() const;
     void readMemory(SystemSnapshot &snapshot) const;
     void readStorage(SystemSnapshot &snapshot) const;
     void readUptime(SystemSnapshot &snapshot) const;
+    double readFanRpm() const;
     GpuSnapshot readGpu() const;
     GpuSnapshot readDrmGpu() const;
 
     CpuCounters m_previousCpu;
     NetworkCounters m_previousNetwork;
     qint64 m_previousNetworkTimestampMs = 0;
+    StorageCounters m_previousStorage;
+    qint64 m_previousStorageTimestampMs = 0;
+    QString m_cpuModel;
 };
 
 QString formatBytes(quint64 bytes);

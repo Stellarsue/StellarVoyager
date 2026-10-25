@@ -24,7 +24,7 @@ export PATH="/tools:$PATH" EXTRA_QT_PLUGINS=iconengines
 /tools/linuxdeploy-x86_64.AppImage --appdir "$out/AppDir" \
     --executable /usr/bin/cabextract --executable /usr/bin/fc-cache \
     --desktop-file "$src/linux-system-monitor.desktop" \
-    --icon-file "$src/icons/linux-system-monitor.svg" \
+    --icon-file "$src/icons/linux-system-monitor.png" \
     --custom-apprun "$src/packaging/AppRun" --plugin qt
 python3 "$src/packaging/collect-runtime.py" "$out/AppDir" "$out/runtime-sources"
 XZ_OPT='-T2 -1' tar -cJf "$out/artifacts/StellarVoyager-1.0.0-runtime-sources.tar.xz" \

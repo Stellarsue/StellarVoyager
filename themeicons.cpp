@@ -3,6 +3,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QRadialGradient>
+#include <cmath>
 
 namespace
 {
@@ -165,6 +166,29 @@ QPixmap drawGlyph(ThemeIcon glyph, int size, const QColor &color)
         painter.drawRoundedRect(QRectF(4.0, 13.8, 6.2, 6.2), 1.3, 1.3);
         painter.drawRoundedRect(QRectF(13.8, 13.8, 6.2, 6.2), 1.3, 1.3);
         break;
+    case ThemeIcon::Settings: {
+        // Eight compact teeth leave enough negative space for a clear hub at
+        // both toolbar (16 px) and menu (24 px) sizes.
+        constexpr qreal pi = 3.14159265358979323846;
+        constexpr qreal offsets[] = {-22.5, -14.0, -11.0, 11.0, 14.0, 22.5};
+        constexpr qreal radii[] = {7.0, 7.0, 9.2, 9.2, 7.0, 7.0};
+        QPainterPath gear;
+        for (int tooth = 0; tooth < 8; ++tooth) {
+            for (int corner = 0; corner < 6; ++corner) {
+                const qreal angle = (tooth * 45.0 + offsets[corner] - 90.0) * pi / 180.0;
+                const QPointF point(12.0 + radii[corner] * std::cos(angle),
+                                    12.0 + radii[corner] * std::sin(angle));
+                if (tooth == 0 && corner == 0)
+                    gear.moveTo(point);
+                else
+                    gear.lineTo(point);
+            }
+        }
+        gear.closeSubpath();
+        painter.drawPath(gear);
+        painter.drawEllipse(QPointF(12.0, 12.0), 2.8, 2.8);
+        break;
+    }
     case ThemeIcon::Show: {
         QPainterPath eye;
         eye.moveTo(3.0, 12.0);
@@ -206,7 +230,8 @@ QIcon ThemeIcons::toggleIcon(ThemeIcon glyph, const QColor &offColor, const QCol
 
 QIcon ThemeIcons::applicationIcon()
 {
-    return icon(ThemeIcon::App);
+    const QIcon generated(QStringLiteral(":/stellarsue/app-icon.png"));
+    return generated.isNull() ? icon(ThemeIcon::App) : generated;
 }
 
 QPixmap ThemeIcons::pixmap(ThemeIcon glyph, const QSize &size, const QColor &color)
