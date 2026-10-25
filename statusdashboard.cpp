@@ -5,7 +5,6 @@
 #include <QApplication>
 #include <QFrame>
 #include <QFontDatabase>
-#include <QGraphicsDropShadowEffect>
 #include <QGridLayout>
 #include <QGuiApplication>
 #include <QHBoxLayout>
@@ -30,11 +29,11 @@ namespace
 constexpr int kPopupWidth = 456;
 constexpr int kGraphSamples = 48;
 
-const QColor kInk(QStringLiteral("#24272B"));
-const QColor kMuted(QStringLiteral("#767C82"));
-const QColor kBlue(QStringLiteral("#3CAEF0"));
-const QColor kBlueText(QStringLiteral("#137DAF"));
-const QColor kRed(QStringLiteral("#E64B5D"));
+const QColor kInk(QStringLiteral("#202832"));
+const QColor kMuted(QStringLiteral("#73808B"));
+const QColor kBlue(QStringLiteral("#34A4ED"));
+const QColor kBlueText(QStringLiteral("#087CB8"));
+const QColor kRed(QStringLiteral("#EB5264"));
 
 QFont dashboardUiFont()
 {
@@ -75,7 +74,12 @@ QFrame *card(QWidget *parent, const QString &objectName, const QString &accessib
     result->setObjectName(objectName);
     result->setAccessibleName(accessibleName);
     result->setFrameShape(QFrame::NoFrame);
-    result->setStyleSheet(QStringLiteral("background-color: #F4F5F6; border-radius: 17px;"));
+    result->setStyleSheet(QStringLiteral(
+        "QFrame#%1 {"
+        " background-color: rgba(255, 255, 255, 204);"
+        " border: 1px solid rgba(91, 119, 140, 29);"
+        " border-radius: 17px;"
+        " }").arg(objectName));
     return result;
 }
 
@@ -192,10 +196,10 @@ protected:
         const QRectF box = QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5);
         QPainterPath clip;
         clip.addRoundedRect(box, 9.0, 9.0);
-        painter.fillPath(clip, QColor(QStringLiteral("#E5E7E9")));
+        painter.fillPath(clip, QColor(QStringLiteral("#E8EDF2")));
         painter.setClipPath(clip);
 
-        painter.setPen(QPen(QColor(QStringLiteral("#D6DADF")), 1.0));
+        painter.setPen(QPen(QColor(QStringLiteral("#D2DCE4")), 1.0));
         for (int step = 1; step < 4; ++step) {
             const qreal y = box.bottom() - box.height() * step / 4.0;
             painter.drawLine(QPointF(box.left(), y), QPointF(box.right(), y));
@@ -264,14 +268,13 @@ StatusDashboard::StatusDashboard(QWidget *parent)
     auto *surface = new QFrame(m_scrollContent);
     surface->setObjectName(QStringLiteral("dashboardSurface"));
     surface->setFrameShape(QFrame::NoFrame);
-    surface->setStyleSheet(QStringLiteral("background-color: #D2D5D8; border-radius: 21px;"));
+    surface->setStyleSheet(QStringLiteral(
+        "QFrame#dashboardSurface {"
+        " background-color: rgba(232, 239, 245, 248);"
+        " border: 1px solid rgba(91, 119, 140, 38);"
+        " border-radius: 22px;"
+        " }"));
     contentLayout->addWidget(surface);
-
-    auto *shadow = new QGraphicsDropShadowEffect(surface);
-    shadow->setBlurRadius(19);
-    shadow->setOffset(0, 4);
-    shadow->setColor(QColor(25, 35, 45, 65));
-    surface->setGraphicsEffect(shadow);
 
     auto *surfaceLayout = new QVBoxLayout(surface);
     surfaceLayout->setContentsMargins(10, 6, 10, 8);
@@ -297,10 +300,14 @@ StatusDashboard::StatusDashboard(QWidget *parent)
     m_settingsButton->setToolTip(QStringLiteral("设置与功能"));
     m_settingsButton->setStyleSheet(QStringLiteral(
         "QToolButton#dashboardSettingsButton {"
-        " background-color: #E8ECEF; border: 1px solid #C8CFD4;"
+        " background-color: rgba(255, 255, 255, 164);"
+        " border: 1px solid rgba(92, 120, 141, 45);"
         " border-radius: 8px; padding: 3px; }"
-        "QToolButton#dashboardSettingsButton:hover { background-color: #FFFFFF; }"
-        "QToolButton#dashboardSettingsButton:pressed { background-color: #D8E3EA; }"
+        "QToolButton#dashboardSettingsButton:hover {"
+        " background-color: rgba(255, 255, 255, 232);"
+        " border-color: rgba(52, 164, 237, 82); }"
+        "QToolButton#dashboardSettingsButton:pressed {"
+        " background-color: rgba(210, 224, 235, 220); }"
         "QToolButton#dashboardSettingsButton::menu-indicator {"
         " image: none; width: 0px; height: 0px; }"));
     toolbar->addWidget(m_settingsButton);
@@ -426,22 +433,24 @@ StatusDashboard::StatusDashboard(QWidget *parent)
             border: none;
         }
         QFrame#dashboardSurface {
-            background-color: #D2D5D8;
-            border-radius: 21px;
+            background-color: rgba(232, 239, 245, 248);
+            border: 1px solid rgba(91, 119, 140, 38);
+            border-radius: 22px;
         }
         QFrame#cpuCard, QFrame#storageCard, QFrame#memoryCard,
         QFrame#fanCard, QFrame#networkCard {
-            background-color: #F4F5F6;
+            background-color: rgba(255, 255, 255, 204);
+            border: 1px solid rgba(91, 119, 140, 29);
             border-radius: 17px;
         }
         QProgressBar#storageUsageBar, QProgressBar#memoryUsageBar {
             border: none;
             border-radius: 4px;
-            background-color: #D7DBDE;
+            background-color: #D9E2E9;
         }
         QProgressBar#storageUsageBar::chunk, QProgressBar#memoryUsageBar::chunk {
             border-radius: 4px;
-            background-color: #228FF2;
+            background-color: #248FE4;
         }
     )"));
     m_scrollContent->setFixedWidth(kPopupWidth);

@@ -3,7 +3,6 @@
 
 #include <QGuiApplication>
 #include <QLabel>
-#include <QLinearGradient>
 #include <QPainter>
 #include <QScreen>
 #include <QTimer>
@@ -24,7 +23,7 @@ TelemetryToolTip::TelemetryToolTip(QWidget *owner)
     layout->setContentsMargins(13, 11, 13, 10);
     layout->setSpacing(6);
     auto *title = new QLabel(QStringLiteral("STELLARVOYAGER  /  LIVE TELEMETRY"), this);
-    title->setStyleSheet(QStringLiteral("color: #9ce8ed; background: transparent; font-size: 11px; letter-spacing: 0.6px;"));
+    title->setStyleSheet(QStringLiteral("color: #A8E7F0; background: transparent; font-size: 11px; letter-spacing: 0.6px;"));
     layout->addWidget(title);
     m_readings = new QLabel(this);
     m_readings->setObjectName(QStringLiteral("tooltipReadings"));
@@ -33,7 +32,7 @@ TelemetryToolTip::TelemetryToolTip(QWidget *owner)
     m_readings->setStyleSheet(QStringLiteral("color: #e7edf4; background: transparent; font-size: 12px;"));
     layout->addWidget(m_readings);
     auto *footer = new QLabel(QStringLiteral("拖动旋转 · 滚轮缩放 · 双击复位\n模型 NASA/JSC · 非 NASA 官方应用"), this);
-    footer->setStyleSheet(QStringLiteral("color: #93a8bb; background: transparent; font-size: 10px;"));
+    footer->setStyleSheet(QStringLiteral("color: #91A7B8; background: transparent; font-size: 10px;"));
     layout->addWidget(footer);
     m_timeout = new QTimer(this);
     m_timeout->setSingleShot(true);
@@ -87,10 +86,12 @@ void TelemetryToolTip::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
-    QLinearGradient background(0, 0, width(), height());
-    background.setColorAt(0, QColor(13, 29, 45, 235));
-    background.setColorAt(1, QColor(12, 19, 34, 228));
-    painter.setBrush(background);
-    painter.setPen(QPen(QColor(130, 219, 232, 65), 0.8));
-    painter.drawRoundedRect(QRectF(rect()).adjusted(0.8, 0.8, -0.8, -0.8), 12, 12);
+    const QRectF frame = QRectF(rect()).adjusted(0.8, 0.8, -0.8, -0.8);
+    painter.setBrush(QColor(12, 25, 38, 242));
+    painter.setPen(QPen(QColor(161, 213, 229, 76), 0.85));
+    painter.drawRoundedRect(frame, 14, 14);
+
+    painter.setBrush(Qt::NoBrush);
+    painter.setPen(QPen(QColor(255, 255, 255, 17), 0.55));
+    painter.drawRoundedRect(frame.adjusted(1.25, 1.25, -1.25, -1.25), 12.8, 12.8);
 }

@@ -71,6 +71,16 @@ uniform vec2 uCamera;
 uniform vec2 uViewport;
 uniform float uDpr;
 
+float roundedFrameMask(vec2 point, vec2 viewport, float radius, float softness)
+{
+    vec2 halfExtent = viewport * 0.5;
+    vec2 edge = abs(point - halfExtent) - (halfExtent - vec2(radius));
+    float distanceToFrame = length(max(edge, vec2(0.0)))
+                            + min(max(edge.x, edge.y), 0.0) - radius;
+    distanceToFrame += softness * 1.5625;
+    return 1.0 - smoothstep(-softness, softness, distanceToFrame);
+}
+
 float hash21(vec2 p)
 {
     p = fract(p * vec2(123.34, 456.21));
@@ -107,11 +117,11 @@ void main()
                  + vec2(sin(uCamera.x), -sin(uCamera.y)) * 0.0075;
     vec2 sampleUv = clamp(uv + drift, 0.002, 0.998);
     vec4 base = texture(uSpaceTexture, sampleUv);
-    // Keep the transparency field still while the colored nebula drifts.
-    vec2 edge = min(gl_FragCoord.xy, uViewport - gl_FragCoord.xy);
-    vec2 t = clamp(edge / (10.0 * uDpr), 0.0, 1.0);
-    vec2 feather = t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
-    float alpha = texture(uSpaceTexture, uv).a * feather.x * feather.y;
+    // A crisp, anti-aliased rounded frame replaces the old broad edge fade.
+    // The one-pixel transition stays sharp at every device-pixel ratio.
+    float frameMask = roundedFrameMask(gl_FragCoord.xy, uViewport,
+                                       20.0 * uDpr, 0.8 * uDpr);
+    float alpha = texture(uSpaceTexture, uv).a * frameMask;
     float breathe = 0.97 + 0.03 * sin(uTime * 0.19 + uv.x * 4.0);
     vec3 color = base.rgb * breathe;
     fragColor = vec4(color * alpha, alpha);
@@ -182,6 +192,16 @@ uniform vec2 uViewport;
 uniform float uDpr;
 uniform sampler2D uCloudTexture;
 
+float roundedFrameMask(vec2 point, vec2 viewport, float radius, float softness)
+{
+    vec2 halfExtent = viewport * 0.5;
+    vec2 edge = abs(point - halfExtent) - (halfExtent - vec2(radius));
+    float distanceToFrame = length(max(edge, vec2(0.0)))
+                            + min(max(edge.x, edge.y), 0.0) - radius;
+    distanceToFrame += softness * 1.5625;
+    return 1.0 - smoothstep(-softness, softness, distanceToFrame);
+}
+
 void main()
 {
     vec2 p = vCloudUv * 2.0 - 1.0;
@@ -193,10 +213,9 @@ void main()
     float gas = cloud.r * cloud.a;
     vec3 ionized = mix(vColor, vec3(0.62, 0.83, 1.0), cloud.g * 0.50);
     ionized = mix(ionized, vec3(1.0, 0.61, 0.34), cloud.b * 0.18);
-    vec2 screenEdge = min(gl_FragCoord.xy, uViewport - gl_FragCoord.xy);
-    float screenFade = smoothstep(0.0, 10.0 * uDpr, screenEdge.x)
-                       * smoothstep(0.0, 10.0 * uDpr, screenEdge.y);
-    fragColor = vec4(ionized, vOpacity * gas * screenFade);
+    float frameMask = roundedFrameMask(gl_FragCoord.xy, uViewport,
+                                       20.0 * uDpr, 0.8 * uDpr);
+    fragColor = vec4(ionized, vOpacity * gas * frameMask);
 }
 )GLSL";
 
@@ -266,16 +285,26 @@ in float vAlpha;
 out vec4 fragColor;
 uniform vec2 uViewport;
 uniform float uDpr;
+
+float roundedFrameMask(vec2 point, vec2 viewport, float radius, float softness)
+{
+    vec2 halfExtent = viewport * 0.5;
+    vec2 edge = abs(point - halfExtent) - (halfExtent - vec2(radius));
+    float distanceToFrame = length(max(edge, vec2(0.0)))
+                            + min(max(edge.x, edge.y), 0.0) - radius;
+    distanceToFrame += softness * 1.5625;
+    return 1.0 - smoothstep(-softness, softness, distanceToFrame);
+}
+
 void main()
 {
     vec2 p = gl_PointCoord * 2.0 - 1.0;
     float d2 = dot(p, p);
     if (d2 > 1.0) discard;
     float glow = exp(-d2 * 2.8);
-    vec2 screenEdge = min(gl_FragCoord.xy, uViewport - gl_FragCoord.xy);
-    float fade = smoothstep(0.0, 10.0 * uDpr, screenEdge.x)
-                 * smoothstep(0.0, 10.0 * uDpr, screenEdge.y);
-    fragColor = vec4(vColor * (0.42 + glow * 0.96), vAlpha * glow * fade);
+    float frameMask = roundedFrameMask(gl_FragCoord.xy, uViewport,
+                                       20.0 * uDpr, 0.8 * uDpr);
+    fragColor = vec4(vColor * (0.42 + glow * 0.96), vAlpha * glow * frameMask);
 }
 )GLSL";
 
@@ -505,10 +534,13 @@ void main()
 }
 )GLSL";
 
-QPainterPath panelPath()
+QPainterPath panelPath(const QSizeF &size, qreal inset = 0.7, qreal radius = 20.0)
 {
     QPainterPath panel;
-    panel.addRoundedRect(QRectF(0.7, 0.7, kWidth - 1.4, kHeight - 1.4), 20.0, 20.0);
+    panel.addRoundedRect(QRectF(inset, inset,
+                                size.width() - inset * 2.0,
+                                size.height() - inset * 2.0),
+                         radius, radius);
     return panel;
 }
 
@@ -736,8 +768,8 @@ QPixmap renderCosmicLayer()
 
     drawStaticStars(painter);
 
-    // Preserve the interior. A 10 logical-pixel feather is applied in screen
-    // space by the shader, independent of texture resolution and scene zoom.
+    // Preserve the interior. The shader applies the final DPI-aware rounded
+    // frame mask in screen space, independent of texture resolution and zoom.
     return layer;
 }
 
@@ -1738,9 +1770,15 @@ void StarMapWidget::paintOverlay(QPainter &painter)
 {
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
     painter.setRenderHint(QPainter::Antialiasing);
+    const QPainterPath panel = panelPath(QSizeF(width(), height()));
+
+    // Establish the clip in widget coordinates before scaling the scene's
+    // compact design grid. This keeps the painter and shader corner radii
+    // identical even when the widget is stretched non-uniformly.
+    painter.save();
+    painter.setClipPath(panel);
     painter.scale(width() / kWidth, height() / kHeight);
 
-    const QPainterPath panel = panelPath();
     if (!m_glReady) {
         painter.drawPixmap(QPointF(0.0, 0.0), m_cosmicLayer);
         const QSizeF logicalSize(m_blackHole->width() * kWidth / width(),
@@ -1749,7 +1787,6 @@ void StarMapWidget::paintOverlay(QPainter &painter)
                                          kCenterY - logicalSize.height() / 2), logicalSize),
                           m_blackHole->renderFrame());
     }
-    painter.setClipPath(panel);
     if (!m_glReady) {
         drawTwinklingStars(painter, m_phase);
         drawComet(painter, m_phase);
@@ -1832,4 +1869,20 @@ void StarMapWidget::paintOverlay(QPainter &painter)
     drawText(painter, QRectF(17, 311, 330, 10),
              QStringLiteral("拖动旋转场景  ·  滚轮缩放  ·  双击复位  ·  悬停查看完整数据"),
              QColor(QStringLiteral("#7D98AA")), 7, QFont::Normal, Qt::AlignCenter);
+
+    // macOS/iOS-inspired window chrome: a restrained cool outline with a
+    // hairline inner highlight. Both strokes are solid so the frame stays
+    // clean instead of dissolving into a colored gradient.
+    painter.restore();
+    painter.setBrush(Qt::NoBrush);
+    painter.setPen(QPen(QColor(114, 184, 207, 82), 0.85,
+                        Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    painter.drawPath(panel);
+
+    QPainterPath innerFrame;
+    innerFrame.addRoundedRect(QRectF(2.0, 2.0, width() - 4.0, height() - 4.0),
+                              18.7, 18.7);
+    painter.setPen(QPen(QColor(255, 255, 255, 19), 0.55,
+                        Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    painter.drawPath(innerFrame);
 }

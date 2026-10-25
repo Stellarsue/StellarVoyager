@@ -379,15 +379,20 @@ int main(int argc, char **argv)
         require(frame.hasAlphaChannel(), "translucent scene framebuffer");
         require(qAlpha(frame.pixel(0, 0)) < 3 && qAlpha(frame.pixel(frame.width() - 1, frame.height() - 1)) < 3,
                 "corners fully merge into desktop");
-        const int fadeY = qRound(frame.height() * 0.72);
         const qreal dpr = scene->devicePixelRatioF();
+        const int cornerOutside = qAlpha(frame.pixel(qRound(4 * dpr), qRound(4 * dpr)));
+        const int cornerInside = qAlpha(frame.pixel(qRound(10 * dpr), qRound(10 * dpr)));
+        require(cornerOutside < 12 && cornerInside >= 220,
+                "frame uses a real rounded corner instead of a square crop");
+        const int fadeY = qRound(frame.height() * 0.72);
         const int outerAlpha = qAlpha(frame.pixel(0, fadeY));
-        const int middleAlpha = qAlpha(frame.pixel(qRound(5 * dpr), fadeY));
-        const int innerAlpha = qAlpha(frame.pixel(qRound(10 * dpr), fadeY));
-        require(outerAlpha < 3 && middleAlpha > 65 && middleAlpha < 185 && innerAlpha >= 230,
-                "edge feather limited to ten logical pixels");
-        const int fullAlpha = qAlpha(frame.pixel(qRound(35 * dpr), fadeY));
-        require(qAbs(fullAlpha - innerAlpha) < 4, "no broad fade inside the ten-pixel margin");
+        const int nearAlpha = qAlpha(frame.pixel(qRound(2 * dpr), fadeY));
+        const int innerAlpha = qAlpha(frame.pixel(qRound(6 * dpr), fadeY));
+        const int fullAlpha = qAlpha(frame.pixel(qRound(20 * dpr), fadeY));
+        require(outerAlpha < 12 && nearAlpha >= 220 && innerAlpha >= 230,
+                "rounded frame reaches full opacity within two logical pixels");
+        require(qAbs(fullAlpha - innerAlpha) < 4,
+                "solid frame has no broad alpha gradient inside its hairline");
         scene->makeCurrent();
         qInfo("Renderer: %s", scene->context()->functions()->glGetString(GL_RENDERER));
         require(scene->context()->functions()->glGetError() == GL_NO_ERROR, "no GL errors");
@@ -520,7 +525,7 @@ int main(int argc, char **argv)
                             require(scene->flightElapsedSeconds() > pausedAt
                                         && scene->flightElapsedSeconds() < pausedAt + 0.65,
                                     "resume does not jump by hidden duration");
-                            qInfo("PASS: spherical sky and 360-degree camera, directional cloud culling, serif fonts and Chinese fallback, NASA orbiter/textures, 48 s cruise, hide/resume, 10 px alpha edges, telemetry, zoom/reset, GL lifecycle.");
+                            qInfo("PASS: spherical sky and 360-degree camera, directional cloud culling, serif fonts and Chinese fallback, NASA orbiter/textures, 48 s cruise, hide/resume, crisp rounded frame, telemetry, zoom/reset, GL lifecycle.");
                             window.hide();
                             QTimer::singleShot(1000, &app, [] {
                                 qFatal("Smoke test failed: settings exit action did not quit");

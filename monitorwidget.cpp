@@ -70,9 +70,9 @@ void SystemMonitorWidget::buildUi()
         " border: none;"
         "}"
         "QFrame#header {"
-        " background: transparent;"
-        " border: none;"
-        " border-radius: 9px;"
+        " background: rgba(7, 17, 27, 116);"
+        " border: 1px solid rgba(185, 220, 233, 22);"
+        " border-radius: 11px;"
         "}"
         "QLabel#brandMark { color: #9ce8ed; font-size: 17px; font-weight: 800; letter-spacing: -1px; }"
         "QLabel#appTitle { color: #f2f8ff; font-size: 16px; font-weight: 700; letter-spacing: 0.4px; }"
@@ -92,21 +92,21 @@ void SystemMonitorWidget::buildUi()
         " margin: 2px 0 2px 4px;"
         " border-radius: 3px;"
         "}"
-        "QScrollBar::handle:vertical { background: rgba(255, 235, 239, 66); min-height: 32px; border-radius: 3px; }"
+        "QScrollBar::handle:vertical { background: rgba(159, 202, 218, 72); min-height: 32px; border-radius: 3px; }"
         "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }"
         "QToolButton {"
-        " background: transparent;"
-        " border: none;"
+        " background: rgba(255, 255, 255, 4);"
+        " border: 1px solid rgba(186, 220, 232, 0);"
         " border-radius: 7px;"
         " padding: 4px;"
         " min-width: 16px;"
         " min-height: 16px;"
         "}"
-        "QToolButton:hover { background: rgba(255, 255, 255, 20); }"
-        "QToolButton:pressed { background: rgba(0, 0, 0, 34); }"
-        "QToolButton:checked { background: rgba(255, 215, 122, 12); }"
+        "QToolButton:hover { background: rgba(183, 222, 236, 18); border-color: rgba(183, 222, 236, 32); }"
+        "QToolButton:pressed { background: rgba(0, 0, 0, 42); border-color: rgba(164, 210, 226, 22); }"
+        "QToolButton:checked { background: rgba(255, 215, 122, 13); border-color: rgba(255, 215, 122, 18); }"
         "QToolButton::menu-indicator { image: none; width: 0px; height: 0px; }"
-        "QToolButton#closeButton:hover { background: rgba(248, 113, 133, 38); }"));
+        "QToolButton#closeButton:hover { background: rgba(248, 113, 133, 38); border-color: rgba(248, 113, 133, 48); }"));
 
     auto *outerLayout = new QVBoxLayout(this);
     outerLayout->setContentsMargins(0, 0, 0, 0);
@@ -223,11 +223,11 @@ void SystemMonitorWidget::buildSettingsMenus()
 void SystemMonitorWidget::populateSettingsMenu(QMenu *menu, bool fromDashboard)
 {
     menu->setStyleSheet(QStringLiteral(
-        "QMenu { background: #F6F7F8; color: #24282D; border: 1px solid #CDD2D6;"
-        " border-radius: 9px; padding: 6px; font-family: Arial, sans-serif; font-size: 12px; }"
+        "QMenu { background: #F8FAFC; color: #202832; border: 1px solid #D7E0E7;"
+        " border-radius: 10px; padding: 6px; font-family: Arial, sans-serif; font-size: 12px; }"
         "QMenu::item { padding: 6px 28px 6px 11px; border-radius: 5px; }"
-        "QMenu::item:selected { background: #DCEEF9; color: #15394D; }"
-        "QMenu::separator { height: 1px; background: #D7DBDE; margin: 5px 8px; }"));
+        "QMenu::item:selected { background: #E1F1FA; color: #12394D; }"
+        "QMenu::separator { height: 1px; background: #DFE6EB; margin: 5px 8px; }"));
 
     if (fromDashboard) {
         auto *show = menu->addAction(QStringLiteral("显示主窗口"));
@@ -313,11 +313,11 @@ void SystemMonitorWidget::buildTray()
 
     m_trayMenu = new QMenu(this);
     m_trayMenu->setStyleSheet(QStringLiteral(
-        "QMenu { background: #2d1822; color: #f8e9ed; border: 1px solid #684050;"
-        " border-radius: 8px; padding: 6px; }"
+        "QMenu { background: #101D29; color: #EEF6FA; border: 1px solid #344C5D;"
+        " border-radius: 10px; padding: 6px; }"
         "QMenu::item { padding: 7px 24px 7px 9px; border-radius: 5px; }"
-        "QMenu::item:selected { background: #563044; }"
-        "QMenu::separator { height: 1px; background: #573244; margin: 5px 7px; }"));
+        "QMenu::item:selected { background: #1D4257; }"
+        "QMenu::separator { height: 1px; background: #2B3F4D; margin: 5px 7px; }"));
     m_networkAction = m_trayMenu->addAction(QStringLiteral("↑ 0 B/s   ↓ 0 B/s"));
     m_networkAction->setEnabled(false);
     m_metricsAction = m_trayMenu->addAction(QStringLiteral("FAN N/A   SSD —   MEM —   CPU —"));
