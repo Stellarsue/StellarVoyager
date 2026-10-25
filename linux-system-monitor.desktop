@@ -1,14 +1,14 @@
 [Desktop Entry]
 Type=Application
-Name=Stellarsue
-Name[zh_CN]=Stellarsue · 飞行器遥测
-Comment=Stellarsue spacecraft telemetry and cosmic system monitor
-Comment[zh_CN]=Stellarsue 飞行器遥测与宇宙系统监控
+Name=StellarVoyager
+Name[zh_CN]=StellarVoyager · 星际航行者
+Comment=Interactive 3D spacecraft telemetry and Linux system monitor
+Comment[zh_CN]=三维宇宙场景中的飞行器遥测与 Linux 系统监控
 Exec=system-monitor
 TryExec=system-monitor
 Icon=linux-system-monitor
 Terminal=false
 Categories=System;Monitor;
 StartupNotify=false
-StartupWMClass=Stellarsue
-Keywords=Stellarsue;system;monitor;cpu;memory;gpu;spacecraft;
+StartupWMClass=StellarVoyager
+Keywords=StellarVoyager;Stellarsue;system;monitor;cpu;memory;gpu;spacecraft;

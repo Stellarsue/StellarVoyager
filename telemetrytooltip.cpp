@@ -23,7 +23,7 @@ TelemetryToolTip::TelemetryToolTip(QWidget *owner)
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(13, 11, 13, 10);
     layout->setSpacing(6);
-    auto *title = new QLabel(QStringLiteral("STELLARSUE  /  LIVE TELEMETRY"), this);
+    auto *title = new QLabel(QStringLiteral("STELLARVOYAGER  /  LIVE TELEMETRY"), this);
     title->setStyleSheet(QStringLiteral("color: #9ce8ed; background: transparent; font-size: 11px; letter-spacing: 0.6px;"));
     layout->addWidget(title);
     m_readings = new QLabel(this);
@@ -60,7 +60,7 @@ void TelemetryToolTip::setSnapshot(const SystemSnapshot &s, const QString &acces
         row(QStringLiteral("温度"), QStringLiteral("%1 °C").arg(s.gpu.temperatureCelsius, 0, 'f', 0));
     row(QStringLiteral("在线"), formatUptime(s.uptimeSeconds));
     m_readings->setText(QStringLiteral("<table cellspacing='0' cellpadding='1' width='100%'>%1</table>").arg(rows));
-    setAccessibleName(QStringLiteral("Stellarsue 实时遥测详情"));
+    setAccessibleName(QStringLiteral("StellarVoyager 实时遥测详情"));
     setAccessibleDescription(accessibleDetails);
     adjustSize();
     // Keep the fixed width after the content-driven height calculation.

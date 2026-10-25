@@ -29,7 +29,7 @@ SystemMonitorWidget::SystemMonitorWidget(QWidget *parent)
     : QWidget(parent)
 {
     setWindowFlags(Qt::Window | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
-    setWindowTitle(QStringLiteral("Stellarsue · 飞行器遥测"));
+    setWindowTitle(QStringLiteral("StellarVoyager · 飞行器遥测"));
     setAttribute(Qt::WA_TranslucentBackground);
     setWindowIcon(ThemeIcons::applicationIcon());
     setFont(ThemeFonts::text());
@@ -123,7 +123,7 @@ void SystemMonitorWidget::buildUi()
     brandMark->setAttribute(Qt::WA_TransparentForMouseEvents);
     headerLayout->addWidget(brandMark);
 
-    auto *titleLabel = new QLabel(QStringLiteral("Stellarsue"), m_header);
+    auto *titleLabel = new QLabel(QStringLiteral("StellarVoyager"), m_header);
     titleLabel->setObjectName(QStringLiteral("appTitle"));
     titleLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
     headerLayout->addWidget(titleLabel);
@@ -198,7 +198,7 @@ void SystemMonitorWidget::buildTray()
         "QMenu::item { padding: 7px 24px 7px 9px; border-radius: 5px; }"
         "QMenu::item:selected { background: #563044; }"
         "QMenu::separator { height: 1px; background: #573244; margin: 5px 7px; }"));
-    m_showAction = m_trayMenu->addAction(QStringLiteral("显示 Stellarsue"));
+    m_showAction = m_trayMenu->addAction(QStringLiteral("显示 StellarVoyager"));
     m_showAction->setIcon(ThemeIcons::icon(ThemeIcon::Show));
     connect(m_showAction, &QAction::triggered, this, &SystemMonitorWidget::showFromTray);
 
@@ -214,7 +214,7 @@ void SystemMonitorWidget::buildTray()
 
     m_trayIcon = new QSystemTrayIcon(this);
     m_trayIcon->setIcon(ThemeIcons::applicationIcon());
-    m_trayIcon->setToolTip(QStringLiteral("Stellarsue · 本机实时遥测"));
+    m_trayIcon->setToolTip(QStringLiteral("StellarVoyager · 本机实时遥测"));
     m_trayIcon->setContextMenu(m_trayMenu);
     connect(m_trayIcon, &QSystemTrayIcon::activated, this, [this](QSystemTrayIcon::ActivationReason reason) {
         if (reason == QSystemTrayIcon::Trigger || reason == QSystemTrayIcon::DoubleClick)

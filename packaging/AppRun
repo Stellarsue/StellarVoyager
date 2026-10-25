@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+voyager_appdir=${APPDIR:-$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)}
+export PATH="$voyager_appdir/usr/bin:$PATH"
+export LD_LIBRARY_PATH="$voyager_appdir/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export QT_PLUGIN_PATH="$voyager_appdir/usr/plugins"
+export QT_QPA_PLATFORM_PLUGIN_PATH="$voyager_appdir/usr/plugins/platforms"
+export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-xcb}"
+exec "$voyager_appdir/usr/bin/system-monitor" "$@"

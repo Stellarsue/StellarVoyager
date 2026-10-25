@@ -1218,7 +1218,7 @@ void StarMapWidget::initializeGL()
 
     const QImage textureImage = m_cosmicLayer.toImage()
                                     .convertToFormat(QImage::Format_RGBA8888)
-                                    .flipped(Qt::Vertical);
+                                    .mirrored(false, true);
     glGenTextures(1, &m_spaceTexture);
     glBindTexture(GL_TEXTURE_2D, m_spaceTexture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1285,7 +1285,7 @@ void StarMapWidget::initializeGL()
                     break;
                 }
                 image = source.scaled(textureSize, textureSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation)
-                            .convertToFormat(QImage::Format_RGBA8888).flipped(Qt::Vertical);
+                            .convertToFormat(QImage::Format_RGBA8888).mirrored(false, true);
             }
             glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, layer, textureSize, textureSize, 1,
                             GL_RGBA, GL_UNSIGNED_BYTE, image.constBits());
@@ -1433,7 +1433,7 @@ void StarMapWidget::renderBlackHole()
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_holeTexture);
     if (m_holeTextureDirty) {
-        const QImage frame = m_blackHole->renderFrame().flipped(Qt::Vertical);
+        const QImage frame = m_blackHole->renderFrame().mirrored(false, true);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame.width(), frame.height(),
                         GL_RGBA, GL_UNSIGNED_BYTE, frame.constBits());
         m_holeTextureDirty = false;
@@ -1593,7 +1593,7 @@ void StarMapWidget::setSnapshot(const SystemSnapshot &snapshot)
                                 .arg(gpuDetails)
                                 .arg(formatUptime(snapshot.uptimeSeconds));
     m_tooltip->setSnapshot(snapshot, details);
-    setAccessibleName(QStringLiteral("Stellarsue 三维飞行器与事件视界星图"));
+    setAccessibleName(QStringLiteral("StellarVoyager 三维飞行器与事件视界星图"));
     setAccessibleDescription(details);
     update();
     m_overlay->update();
@@ -1753,7 +1753,7 @@ void StarMapWidget::paintOverlay(QPainter &painter)
     if (!m_glReady)
         drawNBodyDisk(painter, m_phase, cpuActivity);
 
-    drawText(painter, QRectF(17, 35, 225, 15), QStringLiteral("EVENT HORIZON  /  STELLARSUE"),
+    drawText(painter, QRectF(17, 35, 225, 15), QStringLiteral("EVENT HORIZON  /  STELLARVOYAGER"),
              QColor(QStringLiteral("#9EB6C9")), 8, QFont::Medium);
     drawText(painter, QRectF(17, 49, 210, 13), QStringLiteral("巡航 01 · 固定航线 · 48 s / 圈"),
              QColor(QStringLiteral("#829BAA")), 7);

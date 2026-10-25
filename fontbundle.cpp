@@ -173,7 +173,7 @@ void FontBundle::offerInstallation(QWidget *parent, bool onlyIfMissing)
         return;
 
     QDialog dialog(parent);
-    dialog.setWindowTitle(QStringLiteral("Stellarsue · 安装共享字体"));
+    dialog.setWindowTitle(QStringLiteral("StellarVoyager · 安装共享字体"));
     dialog.resize(620, 510);
     dialog.setStyleSheet(QStringLiteral(
         "QDialog { background: #101e2c; color: #e7edf4; }"
@@ -211,6 +211,6 @@ void FontBundle::offerInstallation(QWidget *parent, bool onlyIfMissing)
     }
     QMessageBox::information(parent, QStringLiteral("字体已安装"),
         QStringLiteral("Times New Roman 四种字形已安装到：\n%1\n\n"
-                       "Stellarsue 已启用。其他桌面程序重启后可在字体列表中选择。\n%2")
+                       "StellarVoyager 已启用。其他桌面程序重启后可在字体列表中选择。\n%2")
             .arg(result.directory, result.warning));
 }

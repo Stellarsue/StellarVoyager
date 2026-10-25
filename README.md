@@ -8,7 +8,41 @@ StellarVoyager 是一款使用 **C++17 · Qt Widgets · OpenGL** 构建的 Linux
 
 ![StellarVoyager 场景预览，使用测试数据](docs/images/scene-preview.png)
 
-*截图使用演示数据，GPU 不可用时显示 N/A。当前界面仍保留早期 Stellarsue 标识；项目正式名称为 StellarVoyager。*
+*截图使用演示数据，GPU 不可用时显示 N/A。*
+
+## 下载 Linux 版
+
+[最新发布版本](https://github.com/Stellarsue/StellarVoyager/releases/latest) · **v1.0.0 / x86_64（amd64）**
+
+- [AppImage 便携版](https://github.com/Stellarsue/StellarVoyager/releases/download/v1.0.0/StellarVoyager-1.0.0-x86_64.AppImage)：内置 Qt、中文/英文回退字体及字体解包工具，无需安装 Qt。
+- [.deb 安装包](https://github.com/Stellarsue/StellarVoyager/releases/download/v1.0.0/StellarVoyager-1.0.0-linux-amd64.deb)：适合 Ubuntu 22.04 / 24.04，自动安装运行依赖并添加应用菜单入口。
+- [SHA256SUMS](https://github.com/Stellarsue/StellarVoyager/releases/download/v1.0.0/SHA256SUMS)：下载文件校验值。
+
+AppImage 运行：
+
+```bash
+chmod +x StellarVoyager-1.0.0-x86_64.AppImage
+./StellarVoyager-1.0.0-x86_64.AppImage
+```
+
+若系统不允许 FUSE 挂载，无需额外开启权限，使用解压运行模式：
+
+```bash
+./StellarVoyager-1.0.0-x86_64.AppImage --appimage-extract-and-run
+```
+
+安装 `.deb`（请在下载目录运行）：
+
+```bash
+sudo apt install ./StellarVoyager-1.0.0-linux-amd64.deb
+system-monitor
+```
+
+安装后也可在应用菜单搜索 **StellarVoyager**。日常运行无需 root。
+下载版需要 Linux x86_64、glibc 2.35+、OpenGL 3.3 和 X11/XWayland；目前不提供 ARM64 构建。
+AppImage 默认通过 X11/XWayland 运行，不附带显卡驱动。精简系统若缺少图形运行库，可安装
+`libopengl0 libgl1 libegl1 libfontconfig1 libharfbuzz0b`；完整 Ubuntu 桌面通常已有这些依赖。
+透明背景依赖桌面合成器，Wayland 下窗口定位和置顶行为可能受合成器限制。
 
 ## 特性
 
@@ -26,19 +60,19 @@ StellarVoyager 是一款使用 **C++17 · Qt Widgets · OpenGL** 构建的 Linux
 
 - Linux 桌面环境，支持 OpenGL 3.3 Core；透明效果需要桌面合成器。
 - C++17 编译器、CMake 3.16 或更新版本。
-- **Qt 6.9 或更新的 Qt 6 版本**，包含 Widgets、OpenGL、OpenGLWidgets 组件和 JPEG 图像支持。
-- 已验证环境：Ubuntu 24.04 / X11 / Qt 6.9.2。Wayland 原生会话的窗口定位、置顶和托盘行为尚未验证。
-
-当前代码使用了 Qt 6.9 引入的 [`QImage::flipped()`](https://doc.qt.io/qt-6/qimage.html#flipped)，不能只安装较旧的发行版 Qt 包。可参考 [Qt 官方安装指南](https://doc.qt.io/qt-6/get-and-install-qt.html) 准备匹配的 Qt 6 SDK。
+- **Qt 6.2 或更新的 Qt 6 版本**，包含 Widgets、OpenGL、OpenGLWidgets 组件和 JPEG 图像支持。
+- 发行版以 Ubuntu 22.04 / GCC 11 / Qt 6.2.4 构建；开发环境另验证过 Ubuntu 24.04 / X11 / Qt 6.9.2。
+- 干净的 Ubuntu 22.04、24.04 容器使用 Xvfb/Mesa 进行图形启动测试；这不等于覆盖所有真实显卡和桌面合成器。
 
 Ubuntu 上的基础工具、字体回退及可选字体解包依赖：
 
 ```bash
 sudo apt install build-essential cmake libgl1-mesa-dev \
-    fonts-liberation fonts-noto-cjk fontconfig cabextract desktop-file-utils
+    qt6-base-dev libqt6opengl6-dev libqt6svg6-dev \
+    fonts-liberation2 fonts-noto-cjk fontconfig cabextract desktop-file-utils
 ```
 
-以上命令不安装 Qt 6.9 SDK。`cabextract` 可用 `bsdtar` 替代；不使用字体安装功能时可不安装解包工具。
+`cabextract` 可用 `bsdtar` 替代；不使用字体安装功能时可不安装解包工具。
 
 ## 编译与运行
 
@@ -51,7 +85,7 @@ cmake --build build -j2
 ./build/system-monitor
 ```
 
-如果 CMake 找不到正确的 Qt，配置时增加 `-DCMAKE_PREFIX_PATH=/path/to/Qt/6.9.2/gcc_64`，将路径替换为实际 SDK 目录。运行环境也需要匹配的 Qt 动态库与平台插件；本项目当前不是独立的 AppImage 安装包。
+如果使用独立 Qt SDK，配置时可增加 `-DCMAKE_PREFIX_PATH=/path/to/Qt/gcc_64`，将路径替换为实际 SDK 目录。直接运行源码构建的程序需要匹配的 Qt 动态库与平台插件；无需自行配置依赖的用户请下载 AppImage。
 
 为兼容已有桌面安装，暂时保留 `system-monitor` 可执行文件名、`linux-system-monitor.desktop` 桌面文件名，以及 `STELLARSUE_` 开头的构建选项和资源路径。
 
@@ -62,7 +96,7 @@ cmake --install build --prefix "$HOME/.local"
 update-desktop-database "$HOME/.local/share/applications"
 ```
 
-确保 `~/.local/bin` 已加入桌面会话的 `PATH`，否则需将安装后的桌面文件中 `Exec` 和 `TryExec` 改为可执行文件的绝对路径。桌面应用列表当前显示旧名称 **Stellarsue**。
+确保 `~/.local/bin` 已加入桌面会话的 `PATH`，否则需将安装后的桌面文件中 `Exec` 和 `TryExec` 改为可执行文件的绝对路径。桌面应用列表显示 **StellarVoyager**。
 
 需要系统级安装时可运行 `sudo cmake --install build`；应用日常运行和用户字体安装不需要 root。
 
@@ -161,5 +195,8 @@ QT_QPA_PLATFORM=offscreen ./build/stellarsue-font-test
 - **NASA/Johnson Space Center**：[Space Shuttle (D)](https://science.nasa.gov/3d-resources/space-shuttle-d/) 模型。遵循 [NASA 媒体与品牌使用指南](https://www.nasa.gov/nasa-brand-center/images-and-media/)，不代表 NASA 背书。转换与装配说明见 [素材来源](assets/nasa-shuttle/SOURCE.md)。
 - **Microsoft Core Fonts for the Web**：原始完整安装包及 [EULA](assets/corefonts/EULA.html)，另见 [来源和分发限制](assets/corefonts/SOURCE.md)。
 - **Qt**：应用框架与 OpenGL 集成；使用和分发时须遵守所采用 Qt 版本的许可。
+
+Linux 发行包的第三方说明、LGPL 动态库替换方式和对应源码见 [打包许可说明](packaging/THIRD_PARTY.md)。Release 中的 `runtime-sources.tar.xz` 是运行库对应源码，不是运行应用所必需的下载。
+构建打包流程见 [Linux 打包指南](packaging/README.md)。
 
 早期 Kenney 模型与飞行器概念图保留在素材目录，当前不嵌入应用。Kenney 素材附带独立的 [CC0 许可](assets/kenney-space-kit/License.txt)。

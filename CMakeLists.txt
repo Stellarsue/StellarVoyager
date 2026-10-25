@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(LinuxSystemMonitor VERSION 1.0.0 LANGUAGES CXX)
+project(StellarVoyager VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -8,8 +8,8 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
+find_package(Qt6 6.2 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
+set(QT_VERSION_MAJOR 6)
 
 set(MONITOR_SOURCES
     blackholewidget.cpp
@@ -42,6 +42,7 @@ if (STELLARSUE_BUNDLE_TIMES)
 endif()
 
 add_executable(system-monitor main.cpp ${MONITOR_SOURCES})
+target_compile_definitions(system-monitor PRIVATE STELLARVOYAGER_VERSION="${PROJECT_VERSION}")
 
 target_link_libraries(system-monitor PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
@@ -81,4 +82,18 @@ if (UNIX AND NOT APPLE)
         install(FILES assets/corefonts/EULA.html assets/corefonts/SOURCE.md
             DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/stellarsue/corefonts)
     endif()
+    install(FILES README.md packaging/THIRD_PARTY.md
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/stellarsue)
+    set(CPACK_GENERATOR "DEB")
+    set(CPACK_PACKAGE_NAME "stellarvoyager")
+    set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+    set(CPACK_PACKAGE_CONTACT "xiexu <1357142137@qq.com>")
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Interactive 3D Linux system monitor")
+    set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/Stellarsue/StellarVoyager")
+    set(CPACK_PACKAGE_FILE_NAME "StellarVoyager-${PROJECT_VERSION}-linux-amd64")
+    set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")
+    set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+    set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "qt6-qpa-plugins, fontconfig, cabextract, fonts-liberation2, fonts-noto-cjk")
+    include(CPack)
 endif()

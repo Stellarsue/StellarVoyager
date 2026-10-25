@@ -1,0 +1,9 @@
+ARG UBUNTU_VERSION=22.04
+FROM ubuntu:${UBUNTU_VERSION}
+ENV DEBIAN_FRONTEND=noninteractive
+# Deliberately no system Qt or fonts: AppImage must provide its own.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    xvfb xauth libgl1-mesa-dri libopengl0 libgl1 libegl1 \
+    libfontconfig1 libharfbuzz0b ca-certificates
+ENV QT_QPA_PLATFORM=xcb
+WORKDIR /tmp

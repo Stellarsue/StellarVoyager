@@ -1,10 +1,21 @@
 #pragma once
 
 #include <QFont>
+#include <QCoreApplication>
+#include <QDir>
+#include <QFontDatabase>
 #include <QStringList>
 
 namespace ThemeFonts
 {
+inline void registerBundledFallbacks()
+{
+    const QDir fonts(QCoreApplication::applicationDirPath()
+                     + QStringLiteral("/../share/fonts/stellarsue"));
+    for (const auto &file : fonts.entryList({QStringLiteral("*.ttf"), QStringLiteral("*.ttc")}, QDir::Files))
+        QFontDatabase::addApplicationFont(fonts.filePath(file));
+}
+
 inline QStringList families()
 {
     return {QStringLiteral("Times New Roman"), QStringLiteral("Liberation Serif"),
