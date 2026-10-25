@@ -10,9 +10,9 @@
 
 StellarVoyager 是一款使用 **C++17 · Qt Widgets · OpenGL** 构建的跨平台桌面系统监控应用。它将 CPU、内存、磁盘、网络和可用时的 GPU 数据融入可旋转的三维宇宙：航天飞机沿固定航线巡航，黑洞与环绕星云构成背景，本机运行状态以飞行器遥测的方式呈现。
 
-![StellarVoyager 场景预览，使用测试数据](docs/images/scene-preview.png)
+![StellarVoyager 新版主界面，采用 macOS 风格圆角边框](docs/images/scene-preview.png)
 
-*截图使用演示数据，GPU 不可用时显示 N/A。*
+*新版主界面实拍：圆角窗口、清爽细描边与实时遥测；GPU 不可用时显示 N/A。*
 
 ## 下载 Linux 版
 
