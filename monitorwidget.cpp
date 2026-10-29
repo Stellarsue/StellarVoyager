@@ -10,6 +10,7 @@
 #endif
 
 #include <algorithm>
+#include <QAbstractButton>
 #include <QAction>
 #include <QApplication>
 #include <QCloseEvent>
@@ -77,6 +78,63 @@ QJsonObject readJsonObject(const QString &path)
     if (!file.open(QIODevice::ReadOnly))
         return {};
     return QJsonDocument::fromJson(file.readAll()).object();
+}
+
+void styleNewsMessageBox(QMessageBox &box)
+{
+    box.setOption(QMessageBox::Option::DontUseNativeDialog);
+    box.setWindowIcon(ThemeIcons::applicationIcon());
+    box.setStyleSheet(QStringLiteral(
+        "QMessageBox {"
+        " background: #101D29;"
+        " color: #EEF6FA;"
+        " border: 1px solid #38566A;"
+        " border-radius: 10px;"
+        "}"
+        "QMessageBox QLabel {"
+        " color: #C9D9E3;"
+        " background: transparent;"
+        " font-family: \"Noto Sans CJK SC\", \"Microsoft YaHei\", Arial, sans-serif;"
+        " font-size: 13px;"
+        "}"
+        "QMessageBox QLabel#qt_msgbox_label {"
+        " color: #F4FAFD;"
+        " font-size: 16px;"
+        " font-weight: 700;"
+        " min-width: 470px;"
+        " padding: 2px 0 7px 0;"
+        "}"
+        "QMessageBox QLabel#qt_msgbox_informativelabel {"
+        " color: #C9D9E3;"
+        " min-width: 470px;"
+        " padding: 0 0 4px 0;"
+        "}"
+        "QMessageBox QPushButton {"
+        " color: #08212A;"
+        " background: #79D7E5;"
+        " border: 1px solid #A2E7F0;"
+        " border-radius: 6px;"
+        " min-width: 82px;"
+        " min-height: 30px;"
+        " padding: 2px 15px;"
+        " font-family: \"Noto Sans CJK SC\", \"Microsoft YaHei\", Arial, sans-serif;"
+        " font-size: 12px;"
+        " font-weight: 700;"
+        "}"
+        "QMessageBox QPushButton:hover { background: #9AE7F0; }"
+        "QMessageBox QPushButton:pressed { background: #54BFCE; }"));
+}
+
+void showNewsWarning(QWidget *parent, const QString &message)
+{
+    QMessageBox box(QMessageBox::Warning,
+                    QStringLiteral("科技新闻自动发布"),
+                    message,
+                    QMessageBox::Ok,
+                    parent);
+    styleNewsMessageBox(box);
+    box.button(QMessageBox::Ok)->setText(QStringLiteral("关闭"));
+    box.exec();
 }
 
 } // namespace
@@ -561,8 +619,7 @@ void SystemMonitorWidget::setNewsEnabled(bool enabled)
     if (!file.open(QIODevice::WriteOnly)
         || file.write(QJsonDocument(settings).toJson(QJsonDocument::Indented)) < 0
         || !file.commit()) {
-        QMessageBox::warning(this, QStringLiteral("科技新闻自动发布"),
-                             QStringLiteral("无法保存自动发布设置。"));
+        showNewsWarning(this, QStringLiteral("无法保存自动发布设置。"));
     }
     updateNewsMenu();
 }
@@ -586,8 +643,7 @@ void SystemMonitorWidget::runNewsNow()
             [this, process](QProcess::ProcessError error) {
                 if (error != QProcess::FailedToStart || m_newsProcess != process)
                     return;
-                QMessageBox::warning(this, QStringLiteral("科技新闻自动发布"),
-                                     QStringLiteral("无法启动任务程序。请重新运行设置脚本。"));
+                showNewsWarning(this, QStringLiteral("无法启动任务程序。请重新运行设置脚本。"));
                 m_newsProcess = nullptr;
                 process->deleteLater();
             });
@@ -603,8 +659,10 @@ void SystemMonitorWidget::runNewsNow()
                     if (details.isEmpty())
                         details = readJsonObject(newsStatePath())
                             .value(QStringLiteral("last_message")).toString();
-                    QMessageBox::warning(this, QStringLiteral("科技新闻自动发布"),
-                                         details.isEmpty() ? QStringLiteral("任务执行失败，请查看运行状态。") : details);
+                    showNewsWarning(this,
+                                    details.isEmpty()
+                                        ? QStringLiteral("任务执行失败，请查看运行状态。")
+                                        : details);
                 }
                 if (m_newsProcess == process)
                     m_newsProcess = nullptr;
@@ -619,12 +677,20 @@ void SystemMonitorWidget::showNewsSetup()
     const QString setup = script.isEmpty() ? QStringLiteral("automation/setup.sh")
         : QFileInfo(script).dir().filePath(QStringLiteral("setup.sh"));
     auto *box = new QMessageBox(QMessageBox::Information,
-                                QStringLiteral("启用科技新闻自动发布"),
-                                QStringLiteral("请在终端运行：\n\nbash '%1'\n\n"
-                                               "请先在平常使用的 Edge 中登录 ChatGPT 和微博。"
-                                               "请在 Edge 地址栏手动打开 edge://inspect，点“远程调试”并允许连接。"
-                                               "然后启用七个北京时间定时点。发布状态可在此菜单查看。").arg(setup),
+                                QStringLiteral("科技新闻自动发布设置"),
+                                QStringLiteral("首次启用需要连接当前 Edge 浏览器"),
                                 QMessageBox::Ok, this);
+    box->setInformativeText(QStringLiteral(
+        "请按以下步骤操作：\n\n"
+        "1. 在常用 Edge 中登录 ChatGPT 和微博。\n"
+        "2. 打开 edge://inspect，启用“远程调试”并允许连接。\n"
+        "3. 在终端运行：\n   bash '%1'\n\n"
+        "完成后将启用七个北京时间定时点，运行状态可在软件菜单中查看。")
+        .arg(setup));
+    styleNewsMessageBox(*box);
+    box->setIconPixmap(ThemeIcons::pixmap(ThemeIcon::App, QSize(48, 48),
+                                         QColor(QStringLiteral("#79D7E5"))));
+    box->button(QMessageBox::Ok)->setText(QStringLiteral("我知道了"));
     box->setTextInteractionFlags(Qt::TextSelectableByMouse);
     box->exec();
     box->deleteLater();
