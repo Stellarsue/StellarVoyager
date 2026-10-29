@@ -14,22 +14,72 @@
 #include <QApplication>
 #include <QCloseEvent>
 #include <QCursor>
+#include <QCoreApplication>
+#include <QDir>
 #include <QEvent>
+#include <QFile>
+#include <QFileInfo>
 #include <QFrame>
 #include <QGuiApplication>
 #include <QGridLayout>
+#include <QHash>
 #include <QHBoxLayout>
 #include <QIcon>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QLabel>
 #include <QMenu>
 #include <QMessageBox>
 #include <QMouseEvent>
+#include <QProcess>
+#include <QSaveFile>
 #include <QScreen>
 #include <QScrollArea>
+#include <QStandardPaths>
 #include <QSystemTrayIcon>
 #include <QTimer>
 #include <QToolButton>
 #include <QVBoxLayout>
+
+namespace {
+
+QString newsScriptPath()
+{
+    const QDir executableDir(QCoreApplication::applicationDirPath());
+    const QStringList candidates = {
+        executableDir.filePath(QStringLiteral("../automation/news_publisher.py")),
+        executableDir.filePath(QStringLiteral("../share/stellarsue/automation/news_publisher.py")),
+        QStringLiteral("/usr/share/stellarsue/automation/news_publisher.py")
+    };
+    for (const QString &candidate : candidates) {
+        if (QFileInfo::exists(candidate))
+            return QFileInfo(candidate).canonicalFilePath();
+    }
+    return {};
+}
+
+QString newsConfigPath()
+{
+    return QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)
+        + QStringLiteral("/stellarvoyager/news.json");
+}
+
+QString newsStatePath()
+{
+    const QString stateRoot = qEnvironmentVariable("XDG_STATE_HOME",
+                                                    QDir::homePath() + QStringLiteral("/.local/state"));
+    return stateRoot + QStringLiteral("/stellarvoyager/news-state.json");
+}
+
+QJsonObject readJsonObject(const QString &path)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly))
+        return {};
+    return QJsonDocument::fromJson(file.readAll()).object();
+}
+
+} // namespace
 
 SystemMonitorWidget::SystemMonitorWidget(QWidget *parent)
     : QWidget(parent)
@@ -337,6 +387,23 @@ void SystemMonitorWidget::buildTray()
         connect(fonts, &QAction::triggered, this, [this] { FontBundle::offerInstallation(this, false); });
     }
 
+#if defined(Q_OS_LINUX)
+    m_newsMenu = m_trayMenu->addMenu(QStringLiteral("科技新闻自动发布"));
+    m_newsStatusAction = m_newsMenu->addAction(QStringLiteral("状态：未配置"));
+    m_newsStatusAction->setEnabled(false);
+    auto *schedule = m_newsMenu->addAction(QStringLiteral("北京时间 06、09、11、14、17、19、21 点"));
+    schedule->setEnabled(false);
+    m_newsMenu->addSeparator();
+    m_newsEnabledAction = m_newsMenu->addAction(QStringLiteral("启用定时发布"));
+    m_newsEnabledAction->setCheckable(true);
+    connect(m_newsEnabledAction, &QAction::toggled, this, &SystemMonitorWidget::setNewsEnabled);
+    auto *runNews = m_newsMenu->addAction(QStringLiteral("立即运行一次"));
+    connect(runNews, &QAction::triggered, this, &SystemMonitorWidget::runNewsNow);
+    auto *setupNews = m_newsMenu->addAction(QStringLiteral("查看启用方法…"));
+    connect(setupNews, &QAction::triggered, this, &SystemMonitorWidget::showNewsSetup);
+    connect(m_newsMenu, &QMenu::aboutToShow, this, &SystemMonitorWidget::updateNewsMenu);
+#endif
+
     m_trayMenu->addSeparator();
     m_quitAction = m_trayMenu->addAction(QStringLiteral("退出"));
     m_quitAction->setIcon(ThemeIcons::icon(ThemeIcon::Power, QColor(QStringLiteral("#F99AAD"))));
@@ -445,6 +512,115 @@ void SystemMonitorWidget::quitFromTray()
     if (m_trayIcon)
         m_trayIcon->hide();
     qApp->quit();
+}
+
+void SystemMonitorWidget::updateNewsMenu()
+{
+    const QJsonObject settings = readJsonObject(newsConfigPath());
+    const QJsonObject history = readJsonObject(newsStatePath());
+    const bool configured = QFileInfo::exists(newsConfigPath());
+    const bool enabled = settings.value(QStringLiteral("enabled")).toBool();
+    m_newsEnabledAction->blockSignals(true);
+    m_newsEnabledAction->setChecked(enabled);
+    m_newsEnabledAction->blockSignals(false);
+    const QString last = history.value(QStringLiteral("last_status")).toString();
+    const QString finished = history.value(QStringLiteral("last_finished")).toString();
+    const QHash<QString, QString> labels = {
+        {QStringLiteral("running"), QStringLiteral("运行中")},
+        {QStringLiteral("publishing"), QStringLiteral("发布中")},
+        {QStringLiteral("skipped"), QStringLiteral("无新文章")},
+        {QStringLiteral("published"), QStringLiteral("已发布")},
+        {QStringLiteral("uncertain"), QStringLiteral("待核查")},
+        {QStringLiteral("failed"), QStringLiteral("失败")}
+    };
+    m_newsStatusAction->setText(configured
+        ? QStringLiteral("状态：%1%2").arg(last.isEmpty() ? QStringLiteral("待运行") : labels.value(last, last),
+                                        finished.isEmpty() ? QString() : QStringLiteral(" · ") + finished.left(16))
+        : QStringLiteral("状态：未配置"));
+    m_newsStatusAction->setToolTip(history.value(QStringLiteral("last_message")).toString());
+}
+
+void SystemMonitorWidget::setNewsEnabled(bool enabled)
+{
+    const QString path = newsConfigPath();
+    if (!QFileInfo::exists(path)) {
+        showNewsSetup();
+        updateNewsMenu();
+        return;
+    }
+    QJsonObject settings = readJsonObject(path);
+    settings.insert(QStringLiteral("enabled"), enabled);
+    QSaveFile file(path);
+    if (!file.open(QIODevice::WriteOnly)
+        || file.write(QJsonDocument(settings).toJson(QJsonDocument::Indented)) < 0
+        || !file.commit()) {
+        QMessageBox::warning(this, QStringLiteral("科技新闻自动发布"),
+                             QStringLiteral("无法保存自动发布设置。"));
+    }
+    updateNewsMenu();
+}
+
+void SystemMonitorWidget::runNewsNow()
+{
+    const QString stableScript = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)
+        + QStringLiteral("/stellarvoyager/automation/news_publisher.py");
+    const QString script = QFileInfo::exists(stableScript) ? stableScript : newsScriptPath();
+    const QString python = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)
+        + QStringLiteral("/stellarvoyager/venv/bin/python");
+    if (script.isEmpty() || !QFileInfo::exists(python)) {
+        showNewsSetup();
+        return;
+    }
+    if (m_newsProcess && m_newsProcess->state() != QProcess::NotRunning)
+        return;
+    auto *process = new QProcess(this);
+    m_newsProcess = process;
+    connect(process, &QProcess::errorOccurred, this,
+            [this, process](QProcess::ProcessError error) {
+                if (error != QProcess::FailedToStart || m_newsProcess != process)
+                    return;
+                QMessageBox::warning(this, QStringLiteral("科技新闻自动发布"),
+                                     QStringLiteral("无法启动任务程序。请重新运行设置脚本。"));
+                m_newsProcess = nullptr;
+                process->deleteLater();
+            });
+    connect(process, &QProcess::finished, this,
+            [this, process](int exitCode, QProcess::ExitStatus) {
+                if (m_newsProcess != process) {
+                    process->deleteLater();
+                    return;
+                }
+                updateNewsMenu();
+                if (exitCode != 0) {
+                    QString details = QString::fromUtf8(process->readAllStandardError()).trimmed();
+                    if (details.isEmpty())
+                        details = readJsonObject(newsStatePath())
+                            .value(QStringLiteral("last_message")).toString();
+                    QMessageBox::warning(this, QStringLiteral("科技新闻自动发布"),
+                                         details.isEmpty() ? QStringLiteral("任务执行失败，请查看运行状态。") : details);
+                }
+                if (m_newsProcess == process)
+                    m_newsProcess = nullptr;
+                process->deleteLater();
+            });
+    process->start(python, {script, QStringLiteral("run"), QStringLiteral("--force")});
+}
+
+void SystemMonitorWidget::showNewsSetup()
+{
+    const QString script = newsScriptPath();
+    const QString setup = script.isEmpty() ? QStringLiteral("automation/setup.sh")
+        : QFileInfo(script).dir().filePath(QStringLiteral("setup.sh"));
+    auto *box = new QMessageBox(QMessageBox::Information,
+                                QStringLiteral("启用科技新闻自动发布"),
+                                QStringLiteral("请在终端运行：\n\nbash '%1'\n\n"
+                                               "请先在平常使用的 Edge 中登录 ChatGPT 和微博。"
+                                               "请在 Edge 地址栏手动打开 edge://inspect，点“远程调试”并允许连接。"
+                                               "然后启用七个北京时间定时点。发布状态可在此菜单查看。").arg(setup),
+                                QMessageBox::Ok, this);
+    box->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    box->exec();
+    box->deleteLater();
 }
 
 bool SystemMonitorWidget::eventFilter(QObject *watched, QEvent *event)

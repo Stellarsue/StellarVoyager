@@ -107,6 +107,12 @@ if (UNIX AND NOT APPLE)
     install(FILES assets/nasa-shuttle/SOURCE.md
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/stellarsue/nasa-shuttle
     )
+    install(FILES automation/news_publisher.py automation/requirements.txt automation/README.md
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/stellarsue/automation
+    )
+    install(PROGRAMS automation/setup.sh
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/stellarsue/automation
+    )
     if (STELLARSUE_BUNDLE_TIMES)
         install(FILES assets/corefonts/EULA.html assets/corefonts/SOURCE.md
             DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/stellarsue/corefonts)

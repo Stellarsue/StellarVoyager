@@ -11,6 +11,7 @@ class QCloseEvent;
 class QFrame;
 class QMenu;
 class QMouseEvent;
+class QProcess;
 class QSystemTrayIcon;
 class QTimer;
 class QToolButton;
@@ -47,6 +48,10 @@ private:
     void updateSnapshot(const SystemSnapshot &snapshot);
     void toggleDashboardAt(const QPoint &globalAnchor);
     void setWindowStayOnTop(bool enabled);
+    void updateNewsMenu();
+    void setNewsEnabled(bool enabled);
+    void runNewsNow();
+    void showNewsSetup();
 
     QFrame *m_header = nullptr;
     QToolButton *m_pinButton = nullptr;
@@ -63,7 +68,11 @@ private:
     QAction *m_metricsAction = nullptr;
     QAction *m_showAction = nullptr;
     QAction *m_dashboardAction = nullptr;
+    QMenu *m_newsMenu = nullptr;
+    QAction *m_newsStatusAction = nullptr;
+    QAction *m_newsEnabledAction = nullptr;
     QAction *m_quitAction = nullptr;
+    QProcess *m_newsProcess = nullptr;
     std::unique_ptr<StatusDashboard> m_dashboard;
 #if defined(Q_OS_MACOS)
     std::unique_ptr<MacMenuBarStatus> m_menuBarStatus;
