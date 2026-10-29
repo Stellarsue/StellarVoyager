@@ -34,6 +34,7 @@ CHATGPT_EDITORS = (
     '#prompt-textarea', '[data-testid="composer"] [contenteditable="true"]',
     '[contenteditable="true"][role="textbox"]',
 )
+CHATGPT_RESPONSES = '[data-markdown-text-style="assistant-message"]'
 WEIBO_EDITORS = (
     'textarea[placeholder*="新鲜事"]',
     '[contenteditable="true"][data-placeholder*="新鲜事"]',
@@ -214,8 +215,65 @@ def visible_selector(selectors: tuple[str, ...], timeout: float = 40) -> str:
     raise RuntimeError("找不到唯一的网页输入框；请检查登录状态或网页是否改版")
 
 
+def fill_editor(selector: str, text: str) -> None:
+    """Fill either a regular form control or a rich contenteditable editor."""
+    from browser_harness.helpers import js, press_key, type_text
+
+    editable = js(
+        "(() => {const e=document.querySelector(" + json.dumps(selector) + ");"
+        "if(!e)return null;return e.isContentEditable})()"
+    )
+    if editable is None:
+        raise RuntimeError("网页输入框已消失")
+    if editable:
+        selected = js(
+            "(() => {const e=document.querySelector(" + json.dumps(selector) + ");"
+            "if(!e)return false;e.focus();const r=document.createRange();"
+            "r.selectNodeContents(e);const s=getSelection();s.removeAllRanges();s.addRange(r);"
+            "return true})()"
+        )
+    else:
+        selected = js(
+            "(() => {const e=document.querySelector(" + json.dumps(selector) + ");"
+            "if(!e)return false;e.focus();e.select();return true})()"
+        )
+    if not selected:
+        raise RuntimeError("无法聚焦网页输入框")
+    press_key("Backspace")
+    type_text(text)
+    current = js(
+        "(() => {const e=document.querySelector(" + json.dumps(selector) +
+        ");return e?.value??e?.innerText??''})()"
+    )
+    # Rich editors may add paragraph gaps and spaces around auto-linked URLs.
+    expected_text = re.sub(r"\s+", "", text)
+    current_text = re.sub(r"\s+", "", current)
+    if expected_text not in current_text:
+        raise RuntimeError(
+            f"网页输入框文本不完整（预期 {len(expected_text)} 字，实际 {len(current_text)} 字）"
+        )
+
+
+def click_selector(selectors: tuple[str, ...], timeout: float = 10) -> None:
+    from browser_harness.helpers import js
+
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        for selector in selectors:
+            clicked = js(
+                "(() => {const items=[...document.querySelectorAll(" + json.dumps(selector) + ")]"
+                ".filter(e=>!e.disabled&&e.getAttribute('aria-disabled')!=='true'"
+                "&&e.checkVisibility({checkOpacity:true,checkVisibilityCSS:true}));"
+                "if(items.length!==1)return false;items[0].click();return true})()"
+            )
+            if clicked:
+                return
+        time.sleep(0.25)
+    raise RuntimeError("找不到唯一的网页操作按钮")
+
+
 def click_text(label: str, last: bool = False) -> None:
-    from browser_harness.helpers import click_at_xy, js
+    from browser_harness.helpers import js
 
     expression = (
         "(() => {const items=[...document.querySelectorAll('button,[role=button],span,div')]"
@@ -225,21 +283,18 @@ def click_text(label: str, last: bool = False) -> None:
         "const leaves=items.filter(e=>!items.some(x=>x!==e&&e.contains(x)));"
         "const choices=leaves.length?leaves:items;"
         "const e=choices[" + ("choices.length-1" if last else "0") + "];"
-        "if(!e)return null;const r=e.getBoundingClientRect();"
-        "return {x:r.x+r.width/2,y:r.y+r.height/2};})()"
+        "if(!e)return false;e.click();return true})()"
     )
     deadline = time.monotonic() + 10
     while time.monotonic() < deadline:
-        match = js(expression)
-        if match:
-            click_at_xy(match["x"], match["y"])
+        if js(expression):
             return
         time.sleep(0.25)
     raise RuntimeError(f"找不到网页操作：{label}")
 
 
 def chatgpt_draft(article: dict) -> str:
-    from browser_harness.helpers import fill_input, js, press_key
+    from browser_harness.helpers import js
 
     prompt = (
         "请把以下科技新闻写成一条简洁的中文微博正文。只使用给出的标题和摘要中的事实，"
@@ -252,23 +307,32 @@ def chatgpt_draft(article: dict) -> str:
     )
     with live_tab("https://chatgpt.com/"):
         editor = visible_selector(CHATGPT_EDITORS)
-        old_count = js("document.querySelectorAll('[data-message-author-role=assistant]').length")
-        fill_input(editor, prompt)
-        press_key("Enter")
+        old_count = js("document.querySelectorAll(" + json.dumps(CHATGPT_RESPONSES) + ").length")
+        fill_editor(editor, prompt)
+        click_selector((
+            'button[data-testid="send-button"]',
+            'button[aria-label="发送"]',
+            'button[aria-label="Send prompt"]',
+        ))
         deadline = time.monotonic() + 150
         previous = ""
         stable_since = time.monotonic()
         while time.monotonic() < deadline:
             time.sleep(0.75)
-            reply = js("(() => {const a=[...document.querySelectorAll('[data-message-author-role=assistant]')];"
-                       "return {count:a.length,text:a.at(-1)?.innerText?.trim()||'',"
-                       "busy:!!document.querySelector('[data-testid=stop-button]')};})()")
+            reply = js(
+                "(() => {const a=[...document.querySelectorAll(" +
+                json.dumps(CHATGPT_RESPONSES) + ")];const last=a.at(-1);"
+                "return {count:a.length,text:last?.innerText?.trim()||'',"
+                "state:last?.closest('[data-talvt-turn-state]')?.getAttribute('data-talvt-turn-state')||'',"
+                "busy:!!document.querySelector('[data-testid=stop-button],button[aria-label*=停止],button[aria-label*=Stop]')};})()"
+            )
             if reply["count"] <= old_count:
                 continue
             current = reply["text"]
             if current != previous:
                 previous, stable_since = current, time.monotonic()
-            if current and not reply["busy"] and time.monotonic() - stable_since >= 4:
+            complete = (reply["state"] == "complete") if reply["state"] else not reply["busy"]
+            if current and complete and time.monotonic() - stable_since >= 4:
                 break
         else:
             raise RuntimeError("等待 ChatGPT 回复超时")
@@ -284,14 +348,14 @@ class PublicationUncertain(RuntimeError):
 
 
 def weibo_publish(text: str) -> None:
-    from browser_harness.helpers import click_at_xy, fill_input, js
+    from browser_harness.helpers import js
 
     with live_tab("https://weibo.com/"):
         editor = visible_selector(WEIBO_EDITORS)
-        fill_input(editor, text)
+        fill_editor(editor, text)
         current_text = js("(() => {const e=document.querySelector(" + json.dumps(editor) +
                           ");return e?.value??e?.innerText??''})()")
-        if text not in current_text:
+        if re.sub(r"\s+", "", text) not in re.sub(r"\s+", "", current_text):
             raise RuntimeError("微博输入框未包含完整文案")
 
         # Weibo asks publishers to declare AI-generated content. Stop if the
@@ -300,18 +364,21 @@ def weibo_publish(text: str) -> None:
         click_text("内容声明")
         click_text("内容由AI生成")
 
-        button = js("(() => {const b=[...document.querySelectorAll('button,[role=button]')]"
-                    ".filter(e=>e.textContent?.trim()==='发布'&&!e.disabled"
-                    "&&e.checkVisibility({checkOpacity:true,checkVisibilityCSS:true}));"
-                    "if(b.length!==1)return null;const r=b[0].getBoundingClientRect();"
-                    "return {x:r.x+r.width/2,y:r.y+r.height/2};})()")
-        if not button:
+        clicked = False
+        for label in ("发送", "发布"):
+            try:
+                click_text(label)
+                clicked = True
+                break
+            except RuntimeError:
+                continue
+        if not clicked:
             raise RuntimeError("找不到唯一的微博发布按钮")
         try:
-            click_at_xy(button["x"], button["y"])
             deadline = time.monotonic() + 20
             while time.monotonic() < deadline:
-                if js("document.body.innerText.includes('发布成功')"):
+                if js("document.body.innerText.includes('发布成功')"
+                      "||document.body.innerText.includes('发送成功')"):
                     return
                 time.sleep(0.5)
             raise TimeoutError("未看到发布成功提示")
