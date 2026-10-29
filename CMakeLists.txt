@@ -110,7 +110,7 @@ if (UNIX AND NOT APPLE)
     install(FILES automation/news_publisher.py automation/requirements.txt automation/README.md
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/stellarsue/automation
     )
-    install(PROGRAMS automation/setup.sh automation/manual_publish.sh
+    install(PROGRAMS automation/setup.sh
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/stellarsue/automation
     )
     if (STELLARSUE_BUNDLE_TIMES)

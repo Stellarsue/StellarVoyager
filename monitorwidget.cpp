@@ -306,6 +306,13 @@ void SystemMonitorWidget::populateSettingsMenu(QMenu *menu, bool fromDashboard)
     connect(pinAction, &QAction::toggled, m_pinButton, &QToolButton::setChecked);
     connect(m_pinButton, &QToolButton::toggled, pinAction, &QAction::setChecked);
 
+#if defined(Q_OS_LINUX)
+    menu->addSeparator();
+    auto *publishNews = menu->addAction(QStringLiteral("立即发布科技新闻"));
+    publishNews->setObjectName(QStringLiteral("settingsPublishNewsAction"));
+    connect(publishNews, &QAction::triggered, this, &SystemMonitorWidget::runNewsNow);
+#endif
+
     if (FontBundle::available()) {
         menu->addSeparator();
         auto *fonts = menu->addAction(QStringLiteral("安装 Times New Roman…"));
