@@ -11,8 +11,33 @@ mkdir -p "$installed_dir"
 if [ "$script_dir" != "$installed_dir" ]; then
     install -m 644 "$script_dir/news_publisher.py" "$installed_dir/news_publisher.py"
     install -m 644 "$script_dir/requirements.txt" "$installed_dir/requirements.txt"
+    install -m 755 "$script_dir/manual_publish.sh" "$installed_dir/manual_publish.sh"
 fi
 script_dir="$installed_dir"
+
+desktop_dir=$(xdg-user-dir DESKTOP 2>/dev/null || true)
+if [ -z "$desktop_dir" ]; then
+    desktop_dir="$HOME/Desktop"
+fi
+mkdir -p "$desktop_dir"
+launcher="$desktop_dir/立即发布科技新闻.desktop"
+escaped_manual=${installed_dir//\\/\\\\}
+escaped_manual=${escaped_manual//\"/\\\"}
+{
+    printf '%s\n' '[Desktop Entry]'
+    printf '%s\n' 'Type=Application'
+    printf '%s\n' 'Name=立即发布科技新闻'
+    printf '%s\n' 'Comment=使用已登录的 ChatGPT 和微博立即发布一条科技新闻'
+    printf 'Exec="%s/manual_publish.sh"\n' "$escaped_manual"
+    printf '%s\n' 'Icon=system-run'
+    printf '%s\n' 'Terminal=true'
+    printf '%s\n' 'Categories=Network;'
+    printf '%s\n' 'StartupNotify=true'
+} > "$launcher"
+chmod 755 "$launcher"
+if command -v gio >/dev/null 2>&1; then
+    gio set "$launcher" metadata::trusted true >/dev/null 2>&1 || true
+fi
 
 "$python_bin" -m venv "$data_dir/venv"
 "$data_dir/venv/bin/python" -m pip install -r "$script_dir/requirements.txt"
@@ -39,3 +64,4 @@ echo '正在连接当前 Edge；如果出现远程调试连接请求，请点击
 
 "$data_dir/venv/bin/python" "$script_dir/news_publisher.py" install-timer
 "$data_dir/venv/bin/python" "$script_dir/news_publisher.py" status
+echo "桌面启动器已创建：$launcher"

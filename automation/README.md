@@ -24,6 +24,8 @@ journalctl --user -u stellarvoyager-news.service -n 50 --no-pager
 
 软件托盘菜单可查看上次状态、暂停或恢复，以及立即执行一次。运行记录在 `~/.local/state/stellarvoyager/news-state.json`，订阅源与启用状态在 `~/.config/stellarvoyager/news.json`。可编辑 `feeds` 列表以更换 RSS/Atom 来源；定时点由 systemd timer 配置。
 
+设置完成后，桌面会出现“立即发布科技新闻”启动器。双击它会打开终端并强制执行一轮发布，完成后显示结果；按回车关闭窗口。手动执行仍需要 Edge、远程调试、ChatGPT 和微博登录状态正常。
+
 如果点击了微博“发布”按钮却没有看到成功提示，任务会记为 `uncertain`，后续不会自动重发同一链接。请登录微博核查，再决定是否手动处理。微博网页结构、登录验证及 AI 内容声明入口可能变化；任务会在找不到对应控件时停止，不会跳过声明直接发布。
 
 关闭自动发布：在托盘菜单取消“启用定时发布”，或运行 `systemctl --user disable --now stellarvoyager-news.timer`。前者保留定时器，但执行器会立即跳过。
