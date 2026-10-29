@@ -340,7 +340,7 @@ def chatgpt_draft(article: dict) -> str:
         draft = re.sub(r"https?://\S+", "", draft).strip(" \n\"“”")
         if not 15 <= len(draft) <= 180:
             raise RuntimeError("ChatGPT 返回的文案长度异常")
-        return f"{draft}\n来源：{article['url']}\n（AI辅助整理）"
+        return f"{draft}\n来源：{article['url']}"
 
 
 class PublicationUncertain(RuntimeError):
@@ -357,12 +357,6 @@ def weibo_publish(text: str) -> None:
                           ");return e?.value??e?.innerText??''})()")
         if re.sub(r"\s+", "", text) not in re.sub(r"\s+", "", current_text):
             raise RuntimeError("微博输入框未包含完整文案")
-
-        # Weibo asks publishers to declare AI-generated content. Stop if the
-        # declaration path is unavailable, before touching the publish button.
-        click_text("公开", last=True)
-        click_text("内容声明")
-        click_text("内容由AI生成")
 
         clicked = False
         for label in ("发送", "发布"):
